@@ -1,0 +1,31 @@
+Estoy creando un sistema para las practicas en una institucion educatica superior, el sistema
+se trabaja en cuando para las experiencias formativas en situaciones reales de trabajo para los
+estudiantes de la institucion.
+
+El sistema lo estoy trabajando con django==4.2 resframework, autenticacion jwtsimple para el backend
+y react con axios y redux para el frontend. por el momento estoy en el backend.
+
+como veras necesito realizar una api para la autenticacion de usuarios con tokens. hay varios usuarios
+que se registran en el sistema y se les asigna un rol, los roles son:
+        ('ADMIN', 'Administrador General'),
+        ('FUA', 'Encargado FUA'),
+        ('PRACTICAS', 'Encargado EFSRT'),
+        ('COORDINADOR', 'Coordinador Academico'),
+        ('SECRETARIA', 'Secretaria'),
+        ('DOCENTE', 'Docente'),
+        ('ESTUDIANTE', 'Estudiante'),
+        ('JURADO', 'Jurado Evaluador'),
+
+para la autenticacion quiero el registro de usuarios,login,logout,cambio de password,recuperacion de password y
+todo trabajando con tokens.
+
+En cuanto a la aplicacion web de practicas pre profecionales en una institucion y las bases son 
+que hay varios  usuarios encargados como un Administrador general encargado por FUA, encargado Practicas
+Es quien agrega a los Docentes que Tomaran asistencia a alumnos,Ademas Gestiona los 3 modulos de las 
+practicas y tambien Agrega a los furados evaluadores para cada modulo de las practicas eso su rol del 
+encargado paracticas, luego hay un cordinador academico que es administrado por el FUA quien solo ve como
+va el encargado Practicas y por ultimo la secretaria quien es administrado por el FUA y su rol es agregar 
+a los Estudiantes al las practicas, por ultimo los estudiantes quienes podran ver los informes,estructura_informe
+y como va en las practicas, cada uno de estos usuarios con sus dashboard correspondiente y acceso a sus funciones 
+correspondientes, el sistema sera con django restframework y react, entonces como lo ves podrias ayudarme con lo que debo de acer
+
