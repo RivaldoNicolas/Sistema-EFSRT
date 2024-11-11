@@ -1,5 +1,5 @@
 Estoy creando un sistema para las practicas en una institucion educatica superior, el sistema
-se trabaja en cuando para las experiencias formativas en situaciones reales de trabajo para los
+se trabaja en cuanto para las experiencias formativas en situaciones reales de trabajo para los
 estudiantes de la institucion.
 
 El sistema lo estoy trabajando con django==4.2 resframework, autenticacion jwtsimple para el backend
@@ -27,5 +27,179 @@ encargado paracticas, luego hay un cordinador academico que es administrado por 
 va el encargado Practicas y por ultimo la secretaria quien es administrado por el FUA y su rol es agregar 
 a los Estudiantes al las practicas, por ultimo los estudiantes quienes podran ver los informes,estructura_informe
 y como va en las practicas, cada uno de estos usuarios con sus dashboard correspondiente y acceso a sus funciones 
-correspondientes, el sistema sera con django restframework y react, entonces como lo ves podrias ayudarme con lo que debo de acer
+correspondientes, el sistema sera con django restframework y react
+
+ESTRUCTURA DEL BACKEND
+practicas_backend/
+│
+├── manage.py
+│
+├── practicas_backend/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+│
+└── api/
+    ├── __init__.py
+    ├── admin.py
+    ├── apps.py
+    ├── models.py
+    │   ├── Usuario
+    │   ├── ModuloPracticas
+    │   ├── Practica
+    │   ├── Asistencia
+    │   ├── Informe
+    │   ├── AsignacionJurado
+    │   ├── Evaluacion
+    │   └── AsignacionDocente
+    │
+    ├── permissions.py
+    │   ├── EsAdministrador
+    │   ├── EsEncargadoPracticas
+    │   ├── EsEncargadoFUA
+    │   ├── EsCordinadorAcademico
+    │   ├── EsSecretaria
+    │   ├── EsDocente
+    │   ├── EsEstudiante
+    │   └── EsJurado
+    │
+    ├── serializers.py
+    ├── urls.py
+    ├── views.py
+    │   ├── Authentication Views
+    │   │   ├── UsuarioViewSet
+    │   │   ├── RegisterView
+    │   │   ├── LogoutView
+    │   │   └── ChangePasswordView
+    │   │
+    │   ├── Core Views
+    │   │   ├── ModuloPracticasViewSet
+    │   │   ├── PracticaViewSet
+    │   │   ├── AsistenciaViewSet
+    │   │   └── InformeViewSet
+    │   │
+    │   └── Management Views
+    │       ├── EvaluacionViewSet
+    │       ├── AsignacionDocenteViewSet
+    │       ├── AsignacionJuradoViewSet
+    │       ├── GestionarEstudiantes
+    │       └── GestionarDocentes
+    │
+    └── tests.py
+
+
+ESTRUCTURA DEL FRONENTD
+src/
+├── components/
+│   ├── Layout/
+│   │   ├── Header.js
+│   │   ├── Sidebar.js
+│   │   └── Footer.js
+│   ├── Auth/
+│   │   ├── Login.js
+│   │   ├── Register.js
+│   │   ├── ChangePassword.js
+│   │   └── ForgotPassword.js
+│   ├── Dashboard/
+│   │   ├── AdminDashboard.js
+│   │   ├── FUADashboard.js
+│   │   ├── PracticasDashboard.js
+│   │   ├── CoordinadorDashboard.js
+│   │   ├── SecretariaDashboard.js
+│   │   ├── DocenteDashboard.js
+│   │   ├── EstudianteDashboard.js
+│   │   └── JuradoDashboard.js
+│   ├── Modulos/
+│   │   ├── ModuloList.js
+│   │   └── ModuloForm.js
+│   ├── Practicas/
+│   │   ├── PracticaList.js
+│   │   └── PracticaForm.js
+│   ├── Asistencias/
+│   │   ├── AsistenciaList.js
+│   │   └── AsistenciaForm.js
+│   ├── Informes/
+│   │   ├── InformeList.js
+│   │   └── InformeForm.js
+│   ├── Evaluaciones/
+│   │   ├── EvaluacionList.js
+│   │   └── EvaluacionForm.js
+│   └── Asignaciones/
+│       ├── AsignacionDocenteList.js
+│       ├── AsignacionDocenteForm.js
+│       ├── AsignacionJuradoList.js
+│       └── AsignacionJuradoForm.js
+├── redux/
+│   ├── store.js
+│   ├── rootReducer.js
+│   └── slices/
+│       ├── authSlice.js
+│       ├── usuarioSlice.js
+│       ├── moduloSlice.js
+│       ├── practicaSlice.js
+│       ├── asistenciaSlice.js
+│       ├── informeSlice.js
+│       ├── evaluacionSlice.js
+│       ├── asignacionDocenteSlice.js
+│       └── asignacionJuradoSlice.js
+├── services/
+│   ├── api.js
+│   └── authService.js
+├── utils/
+│   ├── PrivateRoute.js
+│   └── RoleBasedRoute.js
+├── App.js
+└── index.js
+
+
+1. Componentes (components/):
+
+Layout: Para la estructura general de la aplicación.
+Auth: Componentes para registro, login, cambio de contraseña, etc.
+Dashboard: Un dashboard específico para cada rol de usuario.
+Componentes para cada entidad principal (Modulos, Practicas, Asistencias, etc.): Estos se corresponden con los modelos 
+y vistas en tu API.
+
+2. Redux (redux/):
+
+Configuración del store y rootReducer.
+Slices para cada entidad principal, que se corresponden con los serializers y viewsets de tu API.
+
+3. Servicios (services/):
+
+api.js: Para manejar las llamadas a tu API Django.
+authService.js: Para manejar la autenticación con tokens JWT.
+
+4. Utilidades (utils/):
+
+Componentes para manejar rutas privadas y basadas en roles.
+
+5. Esta estructura se alinea perfectamente con tu API Django. Por ejemplo:
+
+Los componentes de Auth se corresponden con las vistas de autenticación en tu API (RegisterView, LogoutView, etc.).
+Los componentes de cada entidad (como ModuloList y ModuloForm) se corresponden con los viewsets en tu API (ModuloPracticasViewSet, PracticaViewSet, etc.).
+Los slices de Redux se alinean con los serializers y modelos de tu API.
+
+
+
+
+Entiendo perfectamente. Basándonos en tus requisitos, el proceso de autenticación y registro funcionaría de la siguiente manera:
+
+En la página principal, solo habrá un botón de "Login" visible para todos los usuarios.
+
+El proceso de registro será restringido y solo accesible para usuarios autorizados (como el Administrador General, Encargado FUA, etc.).
+
+Cuando un usuario hace clic en "Login", se le presentará un formulario para ingresar sus credenciales.
+
+Una vez que el usuario ingresa sus credenciales y se autentica exitosamente, el sistema verificará su rol.
+
+Dependiendo del rol del usuario, se le redirigirá a su dashboard correspondiente (AdminDashboard, FUADashboard, etc.).
+
+En los dashboards de los usuarios autorizados (como el Administrador o Encargado FUA), habrá una opción para registrar nuevos usuarios y asignarles roles.
+
+El sistema implementará controles de acceso basados en roles para asegurar que cada usuario solo pueda acceder a las funcionalidades correspondientes a su rol.
+
+Este enfoque garantiza que solo los usuarios autorizados puedan registrar nuevos usuarios y que cada persona tenga acceso únicamente a las funciones apropiadas para su rol. ¿Te gustaría que implementemos esta lógica en el código?
+
 

@@ -1,10 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from rest_framework.validators import ValidationError
+from django.utils import timezone
+from django.db.models import Avg
 
-#Modelo Usuario 
 class Usuario(AbstractUser):
-    telefono = models.CharField(max_length=15, blank=True, null=True)
-    direccion = models.TextField(blank=True, null=True)
     ROL_CHOICES = [
         ('ADMIN', 'Administrador General'),
         ('FUA', 'Encargado FUA'),
@@ -16,78 +16,120 @@ class Usuario(AbstractUser):
         ('JURADO', 'Jurado Evaluador'),
     ]
     rol = models.CharField(max_length=30, choices=ROL_CHOICES)
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='usuario_set',
-        blank=True,
-        verbose_name='groups',
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='usuario_set',
-        blank=True,
-        verbose_name='user permissions',
-        help_text='Specific permissions for this user.',
-    )
+    telefono = models.CharField(max_length=15, null=True, blank=True)
+    direccion = models.TextField(null=True, blank=True)
+    edad = models.PositiveIntegerField(null=True, blank=True)
+    def clean(self):
+        if self.rol not in [choice[0] for choice in self.ROL_CHOICES]:
+            raise ValidationError('Rol no válido')
+        if self.edad and self.edad < 0:
+            raise ValidationError('La edad no puede ser negativa')
 
-#modelo ModuloPracticas
+class Estudiante(models.Model):
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='perfil_estudiante')
+    carrera = models.CharField(max_length=100)
+    ciclo = models.IntegerField()
+    codigo_estudiante = models.CharField(max_length=20, unique=True)
+
+    def save(self, *args, **kwargs):
+        self.usuario.rol = 'ESTUDIANTE'
+        self.usuario.save()
+        super().save(*args, **kwargs)
+
 class ModuloPracticas(models.Model):
+    TIPO_CHOICES = [
+        ('MODULO1', 'Módulo I'),
+        ('MODULO2', 'Módulo II'),
+        ('MODULO3', 'Módulo III'),
+    ]
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
-    tipo_modulo = models.CharField(max_length=50)
+    estructura_informe = models.FileField(upload_to='estructura-informe-pdfs/', null=True, blank=True)
+    tipo_modulo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    horas_requeridas = models.IntegerField(null=True, blank=True)
+    fecha_inicio = models.DateField(null=True, blank=True)
+    fecha_fin = models.DateField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    def clean(self):
+        if self.fecha_fin and self.fecha_inicio and self.fecha_fin < self.fecha_inicio:
+            raise ValidationError('La fecha de fin debe ser posterior a la fecha de inicio')
+        if self.horas_requeridas and self.horas_requeridas <= 0:
+            raise ValidationError('Las horas requeridas deben ser positivas')
 
-#modelo Practica
 class Practica(models.Model):
     ESTADO_CHOICES = [
         ('PENDIENTE', 'Pendiente'),
-        ('EN_PROGRESO', 'En Progreso'),
-        ('COMPLETADA', 'Completada'),
-        ('EVALUADA', 'Evaluada'),
+        ('EN_CURSO', 'En Curso'),
+        ('COMPLETADO', 'Completado'),
+        ('EVALUADO', 'Evaluado')
     ]
     estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='practicas')
     modulo = models.ForeignKey(ModuloPracticas, on_delete=models.CASCADE)
+    supervisor = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='supervisiones')
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    supervisor = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='practicas_supervisadas')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
+    horas_completadas = models.IntegerField(default=0)
+    nota_final = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    def calcular_nota_final(self):
+        asistencias = Asistencia.objects.filter(practica=self)
+        evaluaciones = Evaluacion.objects.filter(practica=self)
+        informes = Informe.objects.filter(practica=self)
 
-#modelo Asistencia
+        if asistencias.exists() and evaluaciones.exists() and informes.exists():
+            nota_asistencia = asistencias.aggregate(Avg('puntaje_general'))['puntaje_general__avg'] or 0
+            nota_evaluacion = evaluaciones.aggregate(Avg('calificacion'))['calificacion__avg'] or 0
+            nota_informe = 20 if informes.filter(aprobado=True).exists() else 0
+
+            self.nota_final = (nota_asistencia * 0.3) + (nota_evaluacion * 0.4) + (nota_informe * 0.3)
+            self.save()
+            return self.nota_final
+        return None
+    def clean(self):
+        if self.fecha_fin < self.fecha_inicio:
+            raise ValidationError('La fecha de fin debe ser posterior a la fecha de inicio')
+        if self.horas_completadas < 0:
+            raise ValidationError('Las horas completadas no pueden ser negativas')
+        if self.nota_final and (self.nota_final < 0 or self.nota_final > 20):
+            raise ValidationError('La nota final debe estar entre 0 y 20')
+
 class Asistencia(models.Model):
+    ESTADO_CHOICES = (
+        ('ASISTIO', 'Asistió'),
+        ('TARDANZA', 'Tardanza'),
+        ('FALTA', 'Falta'),
+        ('JUSTIFICADO', 'Justificado')
+    )
+    
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
     fecha = models.DateField()
-    presente = models.CharField(max_length=20)
+    hora_entrada = models.TimeField(null=True, blank=True)
+    hora_salida = models.TimeField(null=True, blank=True)
+    presente = models.CharField(max_length=20, choices=ESTADO_CHOICES)
+    puntaje_general = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
-#modelo Informe
 class Informe(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
+    documento = models.FileField(upload_to='informes/', null=True, blank=True)
     contenido = models.TextField()
-    fecha_entrega = models.DateTimeField()
+    fecha_entrega = models.DateTimeField(auto_now_add=True)
     aprobado = models.BooleanField(default=False)
 
-
-#modelo AsignaciónJurado
-class AsignacionJurado(models.Model):
-    practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
-    jurado = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'rol': 'JURADO'})
-    fecha_asignacion = models.DateField()
-    fecha_evaluacion = models.DateField(null=True, blank=True)
-
-#modelo Evaluación
 class Evaluacion(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
     jurado = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'rol': 'JURADO'})
-    calificacion = models.DecimalField(max_digits=4, decimal_places=2)
-    comentarios = models.TextField()
+    fecha_evaluacion = models.DateTimeField(default=timezone.now)
+    calificacion = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    observaciones = models.TextField(blank=True)
+    criterios_evaluados = models.JSONField(default=dict, blank=True)
 
-#modelo AsignacionDocente
 class AsignacionDocente(models.Model):
     docente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='asignaciones')
     modulo = models.ForeignKey(ModuloPracticas, on_delete=models.CASCADE)
     fecha_asignacion = models.DateField()
 
-#EstructuraInforme
-class EstructuraInforme(models.Model):
-    nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
-    estructura_informe = models.ForeignKey(ModuloPracticas,on_delete=models.CASCADE)
+class AsignacionJurado(models.Model):
+    practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
+    jurado = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'rol': 'JURADO'})
+    fecha_asignacion = models.DateField()
+    fecha_evaluacion = models.DateField(null=True, blank=True)
