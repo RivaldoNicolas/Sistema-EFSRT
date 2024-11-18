@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-ob5((+x$+d)wcc7i7z%pe(_2xog!cs%h^oc&z4ts2r=-45hxy^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '*',
+    
+]
 
 
 # Application definition
@@ -162,3 +165,20 @@ SIMPLE_JWT = {
 
 #configuracion para la autenticacion por tokens (login)
 AUTH_USER_MODEL = 'api.Usuario'
+
+# Configuración de CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Tu frontend Vite
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Configuración adicional de CORS si es necesaria
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]

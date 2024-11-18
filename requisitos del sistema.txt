@@ -93,43 +93,36 @@ ESTRUCTURA DEL FRONENTD
 src/
 ├── components/
 │   ├── Layout/
-│   │   ├── Header.js
-│   │   ├── Sidebar.js
-│   │   └── Footer.js
+│   │   ├── Header.jsx
+│   │   ├── Sidebar.jsx
+│   │   └── Footer.jsx
 │   ├── Auth/
-│   │   ├── Login.js
-│   │   ├── Register.js
-│   │   ├── ChangePassword.js
-│   │   └── ForgotPassword.js
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── ChangePassword.jsx
+│   │   └── ForgotPassword.jsx
 │   ├── Dashboard/
-│   │   ├── AdminDashboard.js
-│   │   ├── FUADashboard.js
-│   │   ├── PracticasDashboard.js
-│   │   ├── CoordinadorDashboard.js
-│   │   ├── SecretariaDashboard.js
-│   │   ├── DocenteDashboard.js
-│   │   ├── EstudianteDashboard.js
-│   │   └── JuradoDashboard.js
+│   │   ├── Dashboard.jsx
 │   ├── Modulos/
-│   │   ├── ModuloList.js
-│   │   └── ModuloForm.js
+│   │   ├── ModuloList.jsx
+│   │   └── ModuloForm.jsx
 │   ├── Practicas/
-│   │   ├── PracticaList.js
-│   │   └── PracticaForm.js
+│   │   ├── PracticaList.jsx
+│   │   └── PracticaForm.jsx
 │   ├── Asistencias/
-│   │   ├── AsistenciaList.js
-│   │   └── AsistenciaForm.js
+│   │   ├── AsistenciaList.jsx
+│   │   └── AsistenciaForm.jsx
 │   ├── Informes/
-│   │   ├── InformeList.js
-│   │   └── InformeForm.js
+│   │   ├── InformeList.jsx
+│   │   └── InformeForm.jsx
 │   ├── Evaluaciones/
-│   │   ├── EvaluacionList.js
-│   │   └── EvaluacionForm.js
+│   │   ├── EvaluacionList.jsx
+│   │   └── EvaluacionForm.jsx
 │   └── Asignaciones/
-│       ├── AsignacionDocenteList.js
-│       ├── AsignacionDocenteForm.js
-│       ├── AsignacionJuradoList.js
-│       └── AsignacionJuradoForm.js
+│       ├── AsignacionDocenteList.jsx
+│       ├── AsignacionDocenteForm.jsx
+│       ├── AsignacionJuradoList.jsx
+│       └── AsignacionJuradoForm.jsx
 ├── redux/
 │   ├── store.js
 │   ├── rootReducer.js
@@ -149,6 +142,8 @@ src/
 ├── utils/
 │   ├── PrivateRoute.js
 │   └── RoleBasedRoute.js
+├── routes/
+│   ├── index.jsx
 ├── App.js
 └── index.js
 

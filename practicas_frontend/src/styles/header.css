@@ -1,0 +1,118 @@
+/* Efectos base */
+.transition-all {
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Efecto de logo giratorio */
+.logo-spin:hover i {
+    transform: rotate(360deg);
+    transition: transform 0.8s ease-in-out;
+}
+
+/* Efecto de brillo para iconos */
+.glow-icon {
+    transition: all 0.3s ease;
+}
+
+.glow-icon:hover {
+    color: #007bff !important;
+    text-shadow: 0 0 10px #007bff, 0 0 20px #007bff, 0 0 30px #007bff;
+    transform: scale(1.2);
+}
+
+/* Efecto neón para links */
+.neon-hover {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.neon-hover:hover {
+    color: #fff !important;
+    text-shadow: 0 0 10px #007bff, 0 0 20px #007bff, 0 0 30px #007bff;
+}
+
+/* Botón arcoiris */
+.rainbow-button {
+    background: linear-gradient(90deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+    background-size: 1000% 1000%;
+    animation: rainbow 16s ease infinite;
+    border: none;
+    color: white !important;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.rainbow-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 14px rgba(0,0,0,0.2);
+    animation: rainbow 3s ease infinite;
+}
+
+@keyframes rainbow { 
+    0% { background-position: 0% 50% }
+    50% { background-position: 100% 50% }
+    100% { background-position: 0% 50% }
+}
+
+/* Iconos animados */
+.rotate-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.rotate-icon:hover {
+    transform: rotate(180deg);
+}
+
+.bounce-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.bounce-icon:hover {
+    animation: bounce 0.8s ease infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.shake-icon {
+    display: inline-block;
+}
+
+.shake-icon:hover {
+    animation: shake 0.5s ease infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+/* Efecto flotante para el botón toggle */
+.floating {
+    animation: floating 3s ease infinite;
+}
+
+@keyframes floating {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Texto de marca con efecto de brillo */
+.brand-text {
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-text:hover {
+    animation: textGlow 1.5s ease infinite;
+}
+
+@keyframes textGlow {
+    0%, 100% { text-shadow: 0 0 10px rgba(0,123,255,0); }
+    50% { text-shadow: 0 0 20px rgba(0,123,255,0.8); }
+}

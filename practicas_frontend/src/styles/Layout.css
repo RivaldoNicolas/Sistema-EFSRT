@@ -1,0 +1,9 @@
+.bg-gradient {
+    background: linear-gradient(to right, #ff80b5, #9089fc);
+    filter: blur(100px);
+    opacity: 0.3;
+    height: 300px;
+    width: 100%;
+    position: absolute;
+    z-index: -1;
+}

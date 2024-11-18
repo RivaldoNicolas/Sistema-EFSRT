@@ -23,7 +23,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['register', 'login', 'token_refresh','logout']:
             return [AllowAny()]
-        return [IsAuthenticated(), EsAdministrador() ]
+        return [IsAuthenticated(),EsAdminOEncargado()]
 
 
     @action(detail=False, methods=['post'])
@@ -69,6 +69,11 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
     def logout(self, request):
@@ -147,24 +152,49 @@ class PracticaViewSet(viewsets.ModelViewSet):
     serializer_class = PracticaSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['estudiante__username', 'estudiante__first_name', 'modulo__nombre']
-    filterset_fields = ['estado', 'modulo']
+    
+    filterset_fields = {
+        'fecha_inicio': ['gte', 'lte', 'exact'],
+        'modulo__tipo_modulo': ['exact'],
+        'estudiante': ['exact'],
+        'supervisor': ['exact'],
+        'estado': ['exact']
+    }
+    
+    search_fields = [
+        'estudiante__username',
+        'estudiante__first_name',
+        'estudiante__last_name',
+        'supervisor__username',
+        'supervisor__first_name',
+        'modulo__nombre',
+        'modulo__tipo_modulo'
+    ]
 
     def get_queryset(self):
         user = self.request.user
+        queryset = Practica.objects.select_related(
+            'estudiante',
+            'supervisor',
+            'modulo'
+        ).prefetch_related(
+            'evaluacion_set__jurado'
+        )
+
         if user.rol == 'ESTUDIANTE':
-            return Practica.objects.filter(estudiante=user)
+            return queryset.filter(estudiante=user)
         elif user.rol == 'DOCENTE':
-            return Practica.objects.filter(supervisor=user)
+            return queryset.filter(supervisor=user)
         elif user.rol == 'JURADO':
-            return Practica.objects.filter(asignacionjurado__jurado=user)
-        return Practica.objects.all()
+            return queryset.filter(asignacionjurado__jurado=user)
+        return queryset
 
     @action(detail=True, methods=['post'])
     def calcular_nota(self, request, pk=None):
         practica = self.get_object()
         nota_final = practica.calcular_nota_final()
         return Response({'nota_final': nota_final})
+
 class AsistenciaViewSet(viewsets.ModelViewSet):
     queryset = Asistencia.objects.all()
     serializer_class = AsistenciaSerializer

@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from rest_framework.validators import ValidationError
 from django.utils import timezone
 from django.db.models import Avg
+from decimal import Decimal
 
 class Usuario(AbstractUser):
     ROL_CHOICES = [
@@ -71,6 +72,8 @@ class Practica(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
     horas_completadas = models.IntegerField(default=0)
     nota_final = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    from decimal import Decimal
+
     def calcular_nota_final(self):
         asistencias = Asistencia.objects.filter(practica=self)
         evaluaciones = Evaluacion.objects.filter(practica=self)
@@ -79,12 +82,15 @@ class Practica(models.Model):
         if asistencias.exists() and evaluaciones.exists() and informes.exists():
             nota_asistencia = asistencias.aggregate(Avg('puntaje_general'))['puntaje_general__avg'] or 0
             nota_evaluacion = evaluaciones.aggregate(Avg('calificacion'))['calificacion__avg'] or 0
-            nota_informe = 20 if informes.filter(aprobado=True).exists() else 0
+            nota_informe = Decimal('20') if informes.filter(aprobado=True).exists() else Decimal('0')
 
-            self.nota_final = (nota_asistencia * 0.3) + (nota_evaluacion * 0.4) + (nota_informe * 0.3)
+            self.nota_final = (nota_asistencia * Decimal('0.3')) + \
+                            (nota_evaluacion * Decimal('0.4')) + \
+                            (nota_informe * Decimal('0.3'))
             self.save()
             return self.nota_final
         return None
+
     def clean(self):
         if self.fecha_fin < self.fecha_inicio:
             raise ValidationError('La fecha de fin debe ser posterior a la fecha de inicio')

@@ -49,7 +49,7 @@ class EsJurado(permissions.BasePermission):
 
 class EsAdminOEncargado(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.rol in ['ADMIN', 'FUA', 'PRACTICAS']
+        return request.user.rol in ['ADMIN', 'FUA', 'PRACTICAS','SECRETARIA','DOCENTE','JURADO']
 
 class PermisosModuloPracticas(permissions.BasePermission):
     def has_permission(self, request, view):
