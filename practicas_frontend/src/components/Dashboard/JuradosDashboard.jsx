@@ -132,7 +132,7 @@ const Overlay = styled.div`
   }
 `;
 
-const FuaDashboard = () => {
+const JuradosDashboard = () => {
     const [currentComponent, setCurrentComponent] = useState('welcome');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const user = useSelector(state => state.auth.user);
@@ -330,4 +330,4 @@ const FuaDashboard = () => {
     );
 }
 
-export default FuaDashboard;
+export default JuradosDashboard;

@@ -105,6 +105,8 @@ export default function Layout() {
                     </p>
                     <div className="d-flex justify-content-center gap-3">
                         <Button
+                            as={Link}
+                            to="/login"
                             variant="primary"
                             size="lg"
                             className="fw-semibold"
@@ -112,8 +114,12 @@ export default function Layout() {
                             Comenzar
                         </Button>
                         <Button
+                            as="a"
+                            href="https://ipadreabad.edu.pe/"
                             variant=""
                             className="text-dark fw-semibold text-decoration-none"
+                            target="_blank"
+                            rel="noopener noreferrer"
                         >
                             Saber más →
                         </Button>

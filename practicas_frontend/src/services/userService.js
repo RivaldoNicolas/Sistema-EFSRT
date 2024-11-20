@@ -9,6 +9,18 @@ const userService = {
       throw error;
     }
   },
+
+  changePassword: async (passwordData) => {
+    try {
+      const response = await api.post("/usuarios/change_password/", {
+        old_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default userService;

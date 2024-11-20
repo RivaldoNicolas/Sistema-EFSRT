@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Nav, Navbar, Dropdown } from 'react-bootstrap';
 import { motion } from 'framer-motion';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaClipboardList, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
+import ChangePassword from './Users/ChangePassword';
+import CreateUser from './Users/CreateUser';
+import UserList from './Users/UserList';
+import UserProfile from './Users/UserProfile';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -16,6 +20,24 @@ const DashboardContainer = styled(Container)`
 const SidebarWrapper = styled(Col)`
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  
+  @media (min-width: 768px) {
+    transform: translateX(0);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex: 0 0 20%; // This will make it take 20% of the width
+    max-width: 20%; // Ensures maximum width constraint
+  }
+
+  @media (max-width: 767px) {
+    position: fixed;
+    height: 100vh;
+    z-index: 1030;
+    transition: transform 0.3s ease;
+    transform: translateX(${props => props.$isOpen ? '0' : '-100%'});
+    width: 280px;
+  }
 `;
 
 const NavItem = styled(motion.div)`
@@ -40,18 +62,30 @@ const NavItem = styled(motion.div)`
 const MainContent = styled(Col)`
   padding: 20px;
   transition: all 0.3s ease;
-`;
 
+  @media (min-width: 768px) {
+    flex: 0 0 80%; // This will make it take 80% of the width
+    max-width: 80%; // Ensures maximum width constraint
+  }
+
+  @media (max-width: 767px) {
+    margin-left: 0;
+    width: 100%;
+  }
+`;
 const Header = styled(Navbar)`
   background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
   border-bottom: 3px solid #3b82f6;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 `;
-
 const UserMenu = styled(Dropdown)`
   .dropdown-toggle::after {
     display: none;
   }
-  
+
   .dropdown-menu {
     background: white;
     border: none;
@@ -59,6 +93,7 @@ const UserMenu = styled(Dropdown)`
     border-radius: 10px;
   }
 `;
+
 const UserInfo = styled.div`
   display: flex;
   align-items: center;
@@ -69,15 +104,38 @@ const UserInfo = styled.div`
   border-radius: 50px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  
+
   &:hover {
     background: #f1f5f9;
     border-color: #3b82f6;
   }
+
+  @media (max-width: 768px) {
+    padding: 8px;
+    .user-details {
+      display: none;
+    }
+  }
+`;
+
+const Overlay = styled.div`
+  display: none;
+  @media (max-width: 991px) {
+    display: ${props => props.$isOpen ? 'block' : 'none'};
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1020;
+  }
 `;
 
 const PracticaDashboard = () => {
+    const [currentComponent, setCurrentComponent] = useState('welcome');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const user = useSelector(state => state.auth.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -91,34 +149,128 @@ const PracticaDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaClipboardList />, text: "ASISTENCIA" },
+        { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
+        { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
         { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
         { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
         { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
     ];
 
+    const renderComponent = () => {
+        switch (currentComponent) {
+            case 'createUser':
+                return <CreateUser />;
+            case 'usersList':
+                return <UserList />;
+            case 'profile':
+                return <UserProfile />;
+            case 'changePassword':
+                return <ChangePassword />;
+            default:
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white p-4 rounded-3 shadow-sm"
+                    >
+                        <div className="text-center mb-4">
+                            <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
+                            <p className="text-muted">Usuario: {user?.username} | Rol: {user?.rol}</p>
+                        </div>
+
+                        <div className="row g-4 mt-2">
+                            <div className="col-md-4">
+                                <div className="card h-100 border-0 shadow-sm">
+                                    <div className="card-body text-center">
+                                        <FaUsers className="text-primary mb-3" size={40} />
+                                        <h5 className="card-title">Gestión de Usuarios</h5>
+                                        <p className="card-text">Administra los usuarios del sistema, crea nuevas cuentas y gestiona permisos.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="col-md-4">
+                                <div className="card h-100 border-0 shadow-sm">
+                                    <div className="card-body text-center">
+                                        <FaCalendarCheck className="text-success mb-3" size={40} />
+                                        <h5 className="card-title">Evaluaciones Diarias</h5>
+                                        <p className="card-text">Realiza seguimiento y evaluación del desempeño diario de los estudiantes.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="col-md-4">
+                                <div className="card h-100 border-0 shadow-sm">
+                                    <div className="card-body text-center">
+                                        <FaChalkboardTeacher className="text-info mb-3" size={40} />
+                                        <h5 className="card-title">Evaluación de Exposiciones</h5>
+                                        <p className="card-text">Gestiona y califica las presentaciones y exposiciones de los estudiantes.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 p-3 bg-light rounded-3">
+                            <h4 className="text-secondary mb-3">Accesos Rápidos</h4>
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <button
+                                        className="btn btn-outline-primary w-100"
+                                        onClick={() => setCurrentComponent('createUser')}
+                                    >
+                                        <FaUserPlus className="me-2" /> Crear Nuevo Usuario
+                                    </button>
+                                </div>
+                                <div className="col-md-6">
+                                    <button
+                                        className="btn btn-outline-success w-100"
+                                        onClick={() => setCurrentComponent('usersList')}
+                                    >
+                                        <FaUsers className="me-2" /> Ver Lista de Usuarios
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 text-center text-muted">
+                            <p>Para comenzar, selecciona una opción del menú lateral o usa los accesos rápidos.</p>
+                        </div>
+                    </motion.div>
+                );
+        }
+    };
+
     return (
         <DashboardContainer fluid>
-            <Row>
-                <SidebarWrapper md={3} lg={2} isOpen={sidebarOpen} className="vh-100 py-4">
-                    <motion.div
-                        className="text-center mb-5"
-                        whileHover={{ scale: 1.05 }}
-                    >
-                        <img
-                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtjWt8u8zfB-EVkIItTLQj4sAPiLsg3vmADg&s"
-                            alt="Logo"
-                            className="img-fluid"
-                            style={{ borderRadius: '50%', width: '100px' }}
-                        />
-                    </motion.div>
+            <Overlay $isOpen={sidebarOpen} onClick={() => setSidebarOpen(false)} />
 
-                    <Nav className="flex-column px-3">
+            <Row>
+                <SidebarWrapper $isOpen={sidebarOpen}>
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <motion.div whileHover={{ scale: 1.05 }}>
+                            <img
+                                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtjWt8u8zfB-EVkIItTLQj4sAPiLsg3vmADg&s"
+                                alt="Logo"
+                                className="img-fluid rounded-circle"
+                                style={{ width: '100px' }}
+                            />
+                        </motion.div>
+                        <button
+                            className="btn-close d-lg-none"
+                            onClick={() => setSidebarOpen(false)}
+                        />
+                    </div>
+
+                    <Nav className="flex-column">
                         {menuItems.map((item, index) => (
                             <NavItem
                                 key={index}
                                 whileHover={{ x: 5 }}
                                 whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                    setCurrentComponent(item.component);
+                                    setSidebarOpen(false);
+                                }}
                             >
                                 {item.icon}
                                 <span>{item.text}</span>
@@ -127,30 +279,35 @@ const PracticaDashboard = () => {
                     </Nav>
                 </SidebarWrapper>
 
-                <MainContent md={9} lg={10}>
-                    <Header className="px-4 py-3">
+                <MainContent>
+                    <Header>
                         <button
-                            className="d-md-none btn btn-light"
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                            className="btn btn-light d-lg-none"
+                            onClick={() => setSidebarOpen(true)}
                         >
-                            ☰
+                            <FaBars />
                         </button>
 
-                        <Navbar.Brand className="text-info fw-bold fs-3">
-                            Panel de Control
+                        <Navbar.Brand className="text-info fw-bold fs-3 ms-3">
+                            {user?.rol}
                         </Navbar.Brand>
 
-                        <UserMenu align="end" className="ms-auto">
+                        <UserMenu align="end">
                             <UserMenu.Toggle as="div">
                                 <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
-                                    <span className="d-none d-md-block">AMACHE CHOQUE CERAPIO</span>
+                                    <div className="user-details">
+                                        <span className="fw-bold">usuario: {user?.username}</span>
+                                    </div>
                                     <FaUserCircle size={35} />
                                 </UserInfo>
                             </UserMenu.Toggle>
 
                             <UserMenu.Menu>
-                                <UserMenu.Item>
+                                <UserMenu.Item onClick={() => setCurrentComponent('profile')}>
                                     <FaInfo className="me-2" /> Mi Perfil
+                                </UserMenu.Item>
+                                <UserMenu.Item onClick={() => setCurrentComponent('changePassword')}>
+                                    <FaKey className="me-2" /> Cambiar Contraseña
                                 </UserMenu.Item>
                                 <UserMenu.Divider />
                                 <UserMenu.Item className="text-danger" onClick={handleLogout}>
@@ -163,11 +320,9 @@ const PracticaDashboard = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white p-4 rounded-3 shadow-sm"
+                        className="mt-4"
                     >
-                        <h2>Bienvenido al Sistema</h2>
-                        {/* Aquí puedes agregar el contenido principal del dashboard */}
-
+                        {renderComponent()}
                     </motion.div>
                 </MainContent>
             </Row>

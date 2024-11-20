@@ -14,12 +14,12 @@ const Header = () => {
     }, []);
 
     return (
-        <nav className={`navbar navbar-expand-lg fixed-top ${isScrolled ? 'bg-white shadow-lg' : 'bg-black'} transition-all`}>
+        <nav className={`navbar navbar-expand-lg fixed-top ${isScrolled ? 'bg-white shadow-lg' : 'bg-transparent-gray'} transition-all`}>
             <div className="container">
                 <Link to="/" className="navbar-brand d-flex align-items-center logo-spin">
                     <i className="fas fa-graduation-cap fa-2x me-2 text-primary glow-icon"></i>
-                    <span className={`fw-bold ${isScrolled ? 'text-dark' : 'text-white'} brand-text`}>
-                        EFSRT Systema
+                    <span className={`fw-bold ${isScrolled ? 'text-dark' : 'text-primary'} brand-text`}>
+                        EFSRT SISTEMA
                     </span>
                 </Link>
 
@@ -30,12 +30,12 @@ const Header = () => {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav ms-auto align-items-center">
                         <li className="nav-item">
-                            <Link to="/about" className={`nav-link ${isScrolled ? 'text-dark' : 'text-white'} mx-2 neon-hover`}>
+                            <Link to="/about" className={`nav-link ${isScrolled ? 'text-dark' : 'text-primary'} mx-2 neon-hover`}>
                                 <i className="fas fa-info-circle me-1 rotate-icon"></i> Acerca de
                             </Link>
                         </li>
                         <li className="nav-item">
-                            <Link to="/contact" className={`nav-link ${isScrolled ? 'text-dark' : 'text-white'} mx-3 neon-hover`}>
+                            <Link to="/contact" className={`nav-link ${isScrolled ? 'text-dark' : 'text-primary'} mx-3 neon-hover`}>
                                 <i className="fas fa-envelope me-1 bounce-icon"></i> Contacto
                             </Link>
                         </li>

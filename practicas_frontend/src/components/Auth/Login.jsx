@@ -3,9 +3,9 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { loginSuccess } from '../../redux/slices/authSlice';
 import authService from '../../services/authService';
-import backgroundImage from '../../assets/gatito.jpg';
+import backgroundImage from '../../assets/fondo.png';
 import Header from '../Layout/Header';
-import { FaUser, FaLock, FaSignInAlt, FaQuestionCircle } from 'react-icons/fa';
+import { FaUser, FaLock } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 
 const Login = () => {
@@ -44,7 +44,7 @@ const Login = () => {
                 'SECRETARIA': '/secretaria/dashboard',
                 'DOCENTE': '/docente/dashboard',
                 'ESTUDIANTE': '/estudiante/dashboard',
-                'JURADO': '/jurado/dashboard'
+                'JURADO': '/jurados/dashboard'
             };
 
             navigate(routeMap[data.user.rol] || '/dashboard');
@@ -79,7 +79,7 @@ const Login = () => {
                 <div className="card shadow-lg" style={{ ...cardStyle, maxWidth: '400px' }}>
                     <div className="card-body p-5">
                         <div className="text-center mb-4">
-                            <h2 className="fw-bold text-primary">EFSRT System</h2>
+                            <h2 className="fw-bold text-primary">EFSRT SISTEMA</h2>
                             <p className="text-muted">Ingrese sus credenciales</p>
                         </div>
 
