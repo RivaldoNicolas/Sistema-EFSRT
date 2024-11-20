@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Usuario, Estudiante,ModuloPracticas, Practica, Asistencia, Informe, Evaluacion, AsignacionDocente, AsignacionJurado
 from django.core.validators import MinValueValidator, MaxValueValidator
 class UsuarioSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Usuario
@@ -41,9 +41,17 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        # Solo actualiza el password si viene en los datos
         if 'password' in validated_data:
-            instance.set_password(validated_data.pop('password'))
-        return super().update(instance, validated_data)
+            password = validated_data.pop('password')
+            instance.set_password(password)
+        
+        # Actualiza el resto de campos
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
 
 class ModuloPracticasSerializer(serializers.ModelSerializer):
     class Meta:

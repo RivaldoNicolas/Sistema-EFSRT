@@ -5,10 +5,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaUser } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import CreateUser from './Users/CreateUser';
 import UserList from './Users/UserList';
+import UserProfile from './Users/UserProfile';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -131,133 +132,135 @@ const Overlay = styled.div`
 `;
 
 const AdminDashboard = () => {
-    const [currentComponent, setCurrentComponent] = useState('welcome');
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const user = useSelector(state => state.auth.user);
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const [currentComponent, setCurrentComponent] = useState('welcome');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const user = useSelector(state => state.auth.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-    const handleLogout = () => {
-        dispatch(logout());
-        dispatch(showAlert({
-            type: 'success',
-            message: '¡Sesión cerrada exitosamente!'
-        }));
-        navigate('/login');
-    };
+  const handleLogout = () => {
+    dispatch(logout());
+    dispatch(showAlert({
+      type: 'success',
+      message: '¡Sesión cerrada exitosamente!'
+    }));
+    navigate('/login');
+  };
 
-    const menuItems = [
-        { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
-        { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
-        { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
-        { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-        { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
-    ];
+  const menuItems = [
+    { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
+    { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
+    { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
+    { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
+    { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
+  ];
 
-    const renderComponent = () => {
-        switch (currentComponent) {
-            case 'createUser':
-                return <CreateUser />;
-            case 'usersList':
-                return <UserList />;
-            default:
-                return (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white p-4 rounded-3 shadow-sm"
-                    >
-                        <h2>Bienvenido al Sistema</h2>
-                    </motion.div>
-                );
-        }
-    };
+  const renderComponent = () => {
+    switch (currentComponent) {
+      case 'createUser':
+        return <CreateUser />;
+      case 'usersList':
+        return <UserList />;
+      case 'profile':
+        return <UserProfile />;
+      default:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-4 rounded-3 shadow-sm"
+          >
+            <h2>Bienvenido al Sistema</h2>
+          </motion.div>
+        );
+    }
+  };
 
-    return (
-        <DashboardContainer fluid>
-            <Overlay $isOpen={sidebarOpen} onClick={() => setSidebarOpen(false)} />
+  return (
+    <DashboardContainer fluid>
+      <Overlay $isOpen={sidebarOpen} onClick={() => setSidebarOpen(false)} />
 
-            <Row>
-                <SidebarWrapper $isOpen={sidebarOpen}>
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                        <motion.div whileHover={{ scale: 1.05 }}>
-                            <img
-                                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtjWt8u8zfB-EVkIItTLQj4sAPiLsg3vmADg&s"
-                                alt="Logo"
-                                className="img-fluid rounded-circle"
-                                style={{ width: '100px' }}
-                            />
-                        </motion.div>
-                        <button
-                            className="btn-close d-lg-none"
-                            onClick={() => setSidebarOpen(false)}
-                        />
-                    </div>
+      <Row>
+        <SidebarWrapper $isOpen={sidebarOpen}>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <img
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtjWt8u8zfB-EVkIItTLQj4sAPiLsg3vmADg&s"
+                alt="Logo"
+                className="img-fluid rounded-circle"
+                style={{ width: '100px' }}
+              />
+            </motion.div>
+            <button
+              className="btn-close d-lg-none"
+              onClick={() => setSidebarOpen(false)}
+            />
+          </div>
 
-                    <Nav className="flex-column">
-                        {menuItems.map((item, index) => (
-                            <NavItem
-                                key={index}
-                                whileHover={{ x: 5 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => {
-                                    setCurrentComponent(item.component);
-                                    setSidebarOpen(false);
-                                }}
-                            >
-                                {item.icon}
-                                <span>{item.text}</span>
-                            </NavItem>
-                        ))}
-                    </Nav>
-                </SidebarWrapper>
+          <Nav className="flex-column">
+            {menuItems.map((item, index) => (
+              <NavItem
+                key={index}
+                whileHover={{ x: 5 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setCurrentComponent(item.component);
+                  setSidebarOpen(false);
+                }}
+              >
+                {item.icon}
+                <span>{item.text}</span>
+              </NavItem>
+            ))}
+          </Nav>
+        </SidebarWrapper>
 
-                <MainContent>
-                    <Header>
-                        <button
-                            className="btn btn-light d-lg-none"
-                            onClick={() => setSidebarOpen(true)}
-                        >
-                            <FaBars />
-                        </button>
+        <MainContent>
+          <Header>
+            <button
+              className="btn btn-light d-lg-none"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <FaBars />
+            </button>
 
-                        <Navbar.Brand className="text-info fw-bold fs-3 ms-3">
-                            Rol: {user?.rol}
-                        </Navbar.Brand>
+            <Navbar.Brand className="text-info fw-bold fs-3 ms-3">
+              {user?.rol}
+            </Navbar.Brand>
 
-                        <UserMenu align="end">
-                            <UserMenu.Toggle as="div">
-                                <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
-                                    <div className="user-details">
-                                        <span className="fw-bold">usuario: {user?.username}</span>
-                                    </div>
-                                    <FaUserCircle size={35} />
-                                </UserInfo>
-                            </UserMenu.Toggle>
+            <UserMenu align="end">
+              <UserMenu.Toggle as="div">
+                <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
+                  <div className="user-details">
+                    <span className="fw-bold">usuario: {user?.username}</span>
+                  </div>
+                  <FaUserCircle size={35} />
+                </UserInfo>
+              </UserMenu.Toggle>
 
-                            <UserMenu.Menu>
-                                <UserMenu.Item>
-                                    <FaInfo className="me-2" /> Mi Perfil
-                                </UserMenu.Item>
-                                <UserMenu.Divider />
-                                <UserMenu.Item className="text-danger" onClick={handleLogout}>
-                                    <FaSignOutAlt className="me-2" /> Cerrar Sesión
-                                </UserMenu.Item>
-                            </UserMenu.Menu>
-                        </UserMenu>
-                    </Header>
+              <UserMenu.Menu>
+                <UserMenu.Item onClick={() => setCurrentComponent('profile')}>
+                  <FaInfo className="me-2" /> Mi Perfil
+                </UserMenu.Item>
+                <UserMenu.Divider />
+                <UserMenu.Item className="text-danger" onClick={handleLogout}>
+                  <FaSignOutAlt className="me-2" /> Cerrar Sesión
+                </UserMenu.Item>
+              </UserMenu.Menu>
+            </UserMenu>
+          </Header>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-4"
-                    >
-                        {renderComponent()}
-                    </motion.div>
-                </MainContent>
-            </Row>
-        </DashboardContainer>
-    );
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4"
+          >
+            {renderComponent()}
+          </motion.div>
+        </MainContent>
+      </Row>
+    </DashboardContainer>
+  );
 }
 
 export default AdminDashboard;

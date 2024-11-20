@@ -12,7 +12,6 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      // Persistir datos
       localStorage.setItem("user", JSON.stringify(action.payload.user));
       localStorage.setItem("token", action.payload.token);
     },
@@ -25,13 +24,17 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      // Limpiar storage
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("refresh_token");
     },
+    updateUser: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+      localStorage.setItem("user", JSON.stringify(state.user));
+    },
   },
 });
 
-export const { loginSuccess, refreshTokenSuccess, logout } = authSlice.actions;
+export const { loginSuccess, refreshTokenSuccess, logout, updateUser } =
+  authSlice.actions;
 export default authSlice.reducer;
