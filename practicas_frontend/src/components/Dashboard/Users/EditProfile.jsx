@@ -108,6 +108,16 @@ const EditProfile = ({ onCancel }) => {
             }));
         }
     };
+    const roleLabels = {
+        'ADMIN': 'Administrador General',
+        'FUA': 'Encargado FUA',
+        'PRACTICAS': 'Encargado EFSRT',
+        'COORDINADOR': 'Coordinador Academico',
+        'SECRETARIA': 'Secretaria',
+        'DOCENTE': 'Docente',
+        'ESTUDIANTE': 'Estudiante',
+        'JURADO': 'Jurado Evaluador'
+    };
 
     return (
         <motion.div
@@ -220,7 +230,7 @@ const EditProfile = ({ onCancel }) => {
                             <Form.Control
                                 type="text"
                                 name="rol"
-                                value={formData.rol}
+                                value={roleLabels[formData.rol] || formData.rol}
                                 disabled
                             />
                         </Form.Group>

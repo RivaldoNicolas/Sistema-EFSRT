@@ -132,6 +132,18 @@ const Overlay = styled.div`
   }
 `;
 
+const roleLabels = {
+    'ADMIN': 'Administrador General',
+    'FUA': 'Encargado FUA',
+    'PRACTICAS': 'Encargado EFSRT',
+    'COORDINADOR': 'Coordinador Academico',
+    'SECRETARIA': 'Secretaria',
+    'DOCENTE': 'Docente',
+    'ESTUDIANTE': 'Estudiante',
+    'JURADO': 'Jurado Evaluador'
+};
+
+
 const DocenteDashboard = () => {
     const [currentComponent, setCurrentComponent] = useState('welcome');
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -289,14 +301,14 @@ const DocenteDashboard = () => {
                         </button>
 
                         <Navbar.Brand className="text-info fw-bold fs-3 ms-3">
-                            {user?.rol}
+                            {roleLabels[user?.rol] || user?.rol}
                         </Navbar.Brand>
 
                         <UserMenu align="end">
                             <UserMenu.Toggle as="div">
                                 <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
                                     <div className="user-details">
-                                        <span className="fw-bold">usuario: {user?.username}</span>
+                                        <span className="fw-bold">{user?.username}</span>
                                     </div>
                                     <FaUserCircle size={35} />
                                 </UserInfo>

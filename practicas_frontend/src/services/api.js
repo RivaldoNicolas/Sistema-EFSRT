@@ -3,9 +3,10 @@ import authService from "./authService";
 import { store } from "../redux/store";
 import { logout, refreshTokenSuccess } from "../redux/slices/authSlice";
 import { showAlert } from "../redux/slices/alertSlice";
+import config from "../services/config.js";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: config.API_URL,
   headers: {
     "Content-Type": "application/json",
   },

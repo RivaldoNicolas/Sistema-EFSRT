@@ -5,12 +5,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaChalkboardTeacher, FaBars } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
-import ChangePassword from './Users/ChangePassword';
-import CreateUser from './Users/CreateUser';
-import UserList from './Users/UserList';
-import UserProfile from './Users/UserProfile';
+import UserList from '../Dashboard/Users/UserList';
+import UserProfile from '../Dashboard/Users/UserProfile';
+import EvaluacionForm from '../Evaluaciones/EvaluacionForm';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -20,14 +19,14 @@ const DashboardContainer = styled(Container)`
 const SidebarWrapper = styled(Col)`
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-  
+ 
   @media (min-width: 768px) {
     transform: translateX(0);
     position: sticky;
     top: 0;
     height: 100vh;
-    flex: 0 0 20%; // This will make it take 20% of the width
-    max-width: 20%; // Ensures maximum width constraint
+    flex: 0 0 20%;
+    max-width: 20%;
   }
 
   @media (max-width: 767px) {
@@ -64,8 +63,8 @@ const MainContent = styled(Col)`
   transition: all 0.3s ease;
 
   @media (min-width: 768px) {
-    flex: 0 0 80%; // This will make it take 80% of the width
-    max-width: 80%; // Ensures maximum width constraint
+    flex: 0 0 80%;
+    max-width: 80%;
   }
 
   @media (max-width: 767px) {
@@ -73,6 +72,7 @@ const MainContent = styled(Col)`
     width: 100%;
   }
 `;
+
 const Header = styled(Navbar)`
   background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
   border-bottom: 3px solid #3b82f6;
@@ -81,6 +81,7 @@ const Header = styled(Navbar)`
   justify-content: space-between;
   width: 100%;
 `;
+
 const UserMenu = styled(Dropdown)`
   .dropdown-toggle::after {
     display: none;
@@ -148,24 +149,24 @@ const JuradosDashboard = () => {
         navigate('/login');
     };
 
+    const handleUserSelect = (userId) => {
+        setCurrentComponent('EvaluacionForm');
+        navigate(`/jurado/evaluacion/${userId}`);
+    };
+
     const menuItems = [
-        { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
         { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
-        { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
-        { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-        { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
+        { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN", component: 'EvaluacionForm' }
     ];
 
     const renderComponent = () => {
         switch (currentComponent) {
-            case 'createUser':
-                return <CreateUser />;
             case 'usersList':
-                return <UserList />;
+                return <UserList onUserSelect={handleUserSelect} />;
+            case 'EvaluacionForm':
+                return <EvaluacionForm />;
             case 'profile':
                 return <UserProfile />;
-            case 'changePassword':
-                return <ChangePassword />;
             default:
                 return (
                     <motion.div
@@ -173,68 +174,7 @@ const JuradosDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white p-4 rounded-3 shadow-sm"
                     >
-                        <div className="text-center mb-4">
-                            <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
-                            <p className="text-muted">Usuario: {user?.username} | Rol: {user?.rol}</p>
-                        </div>
-
-                        <div className="row g-4 mt-2">
-                            <div className="col-md-4">
-                                <div className="card h-100 border-0 shadow-sm">
-                                    <div className="card-body text-center">
-                                        <FaUsers className="text-primary mb-3" size={40} />
-                                        <h5 className="card-title">Gestión de Usuarios</h5>
-                                        <p className="card-text">Administra los usuarios del sistema, crea nuevas cuentas y gestiona permisos.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-md-4">
-                                <div className="card h-100 border-0 shadow-sm">
-                                    <div className="card-body text-center">
-                                        <FaCalendarCheck className="text-success mb-3" size={40} />
-                                        <h5 className="card-title">Evaluaciones Diarias</h5>
-                                        <p className="card-text">Realiza seguimiento y evaluación del desempeño diario de los estudiantes.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-md-4">
-                                <div className="card h-100 border-0 shadow-sm">
-                                    <div className="card-body text-center">
-                                        <FaChalkboardTeacher className="text-info mb-3" size={40} />
-                                        <h5 className="card-title">Evaluación de Exposiciones</h5>
-                                        <p className="card-text">Gestiona y califica las presentaciones y exposiciones de los estudiantes.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 p-3 bg-light rounded-3">
-                            <h4 className="text-secondary mb-3">Accesos Rápidos</h4>
-                            <div className="row g-3">
-                                <div className="col-md-6">
-                                    <button
-                                        className="btn btn-outline-primary w-100"
-                                        onClick={() => setCurrentComponent('createUser')}
-                                    >
-                                        <FaUserPlus className="me-2" /> Crear Nuevo Usuario
-                                    </button>
-                                </div>
-                                <div className="col-md-6">
-                                    <button
-                                        className="btn btn-outline-success w-100"
-                                        onClick={() => setCurrentComponent('usersList')}
-                                    >
-                                        <FaUsers className="me-2" /> Ver Lista de Usuarios
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 text-center text-muted">
-                            <p>Para comenzar, selecciona una opción del menú lateral o usa los accesos rápidos.</p>
-                        </div>
+                        <h2>Bienvenido al Sistema</h2>
                     </motion.div>
                 );
         }
@@ -305,9 +245,6 @@ const JuradosDashboard = () => {
                             <UserMenu.Menu>
                                 <UserMenu.Item onClick={() => setCurrentComponent('profile')}>
                                     <FaInfo className="me-2" /> Mi Perfil
-                                </UserMenu.Item>
-                                <UserMenu.Item onClick={() => setCurrentComponent('changePassword')}>
-                                    <FaKey className="me-2" /> Cambiar Contraseña
                                 </UserMenu.Item>
                                 <UserMenu.Divider />
                                 <UserMenu.Item className="text-danger" onClick={handleLogout}>

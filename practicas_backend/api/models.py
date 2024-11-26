@@ -8,7 +8,7 @@ from decimal import Decimal
 class Usuario(AbstractUser):
     ROL_CHOICES = [
         ('ADMIN', 'Administrador General'),
-        ('FUA', 'Encargado FUA'),
+        ('FUA', 'Encargado JUA'),
         ('PRACTICAS', 'Encargado EFSRT'),
         ('COORDINADOR', 'Coordinador Academico'),
         ('SECRETARIA', 'Secretaria'),
@@ -72,7 +72,6 @@ class Practica(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
     horas_completadas = models.IntegerField(default=0)
     nota_final = models.DecimalField(max_digits=4, decimal_places=2, null=True)
-    from decimal import Decimal
 
     def calcular_nota_final(self):
         asistencias = Asistencia.objects.filter(practica=self)
@@ -99,20 +98,50 @@ class Practica(models.Model):
         if self.nota_final and (self.nota_final < 0 or self.nota_final > 20):
             raise ValidationError('La nota final debe estar entre 0 y 20')
 
+
 class Asistencia(models.Model):
-    ESTADO_CHOICES = (
-        ('ASISTIO', 'Asistió'),
-        ('TARDANZA', 'Tardanza'),
-        ('FALTA', 'Falta'),
-        ('JUSTIFICADO', 'Justificado')
-    )
-    
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
     fecha = models.DateField()
     hora_entrada = models.TimeField(null=True, blank=True)
     hora_salida = models.TimeField(null=True, blank=True)
-    presente = models.CharField(max_length=20, choices=ESTADO_CHOICES)
+    criterios_asistencia = models.JSONField(null=True, blank=True)
+    puntaje_diario = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     puntaje_general = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    def calcular_puntaje_diario(self):
+        if self.criterios_asistencia:
+            conceptual = Decimal(str(self.criterios_asistencia.get('CONCEPTUAL', 0)))
+            procedimental = Decimal(str(self.criterios_asistencia.get('PROCEDIMENTAL', 0)))
+            actitudinal = Decimal(str(self.criterios_asistencia.get('ACTITUDINAL', 0)))
+            
+            suma = conceptual + procedimental + actitudinal
+            self.puntaje_diario = suma / 3
+            self.save()
+            return self.puntaje_diario
+        return Decimal('0.00')
+
+    def calcular_puntaje_general(self):
+        asistencias = Asistencia.objects.filter(practica=self.practica)
+        total_puntajes = Decimal('0.00')
+        count = 0
+        
+        for asistencia in asistencias:
+            if asistencia.puntaje_diario:
+                total_puntajes += asistencia.puntaje_diario
+                count += 1
+        
+        if count > 0:
+            self.puntaje_general = total_puntajes / count
+            self.save()
+            return self.puntaje_general
+        return Decimal('0.00')
+
+    def save(self, *args, **kwargs):
+        if self.criterios_asistencia:
+            self.calcular_puntaje_diario()
+        super().save(*args, **kwargs)
+        self.calcular_puntaje_general()
+
 
 class Informe(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)

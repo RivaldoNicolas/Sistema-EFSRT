@@ -56,8 +56,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 class ModuloPracticasSerializer(serializers.ModelSerializer):
     class Meta:
         model = ModuloPracticas
-        fields = ['id', 'nombre', 'descripcion', 'estructura_informe', 
-                 'tipo_modulo', 'fecha_inicio', 'fecha_fin', 'activo']
+        fields = '__all__'
 
 class PracticaSerializer(serializers.ModelSerializer):
     nota_final = serializers.DecimalField(

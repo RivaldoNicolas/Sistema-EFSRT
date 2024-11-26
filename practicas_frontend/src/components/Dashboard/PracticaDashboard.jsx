@@ -5,12 +5,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaUserPlus, FaBars, FaKey, FaBookReader, FaGavel, FaLayerGroup } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
 import CreateUser from './Users/CreateUser';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
+import ModuleManagement from '../Modulos/ModuleManagement';
+import AsignarJurado from '../Modulos/AsignarJurado';
+
+
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -132,7 +136,21 @@ const Overlay = styled.div`
   }
 `;
 
+const roleLabels = {
+    'ADMIN': 'Administrador General',
+    'FUA': 'Encargado FUA',
+    'PRACTICAS': 'Encargado EFSRT',
+    'COORDINADOR': 'Coordinador Academico',
+    'SECRETARIA': 'Secretaria',
+    'DOCENTE': 'Docente',
+    'ESTUDIANTE': 'Estudiante',
+    'JURADO': 'Jurado Evaluador'
+};
+
+
 const PracticaDashboard = () => {
+    const [selectedModule, setSelectedModule] = useState(null);
+
     const [currentComponent, setCurrentComponent] = useState('welcome');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const user = useSelector(state => state.auth.user);
@@ -149,19 +167,52 @@ const PracticaDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
-        { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
-        { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
-        { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-        { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
+        {
+            icon: <FaLayerGroup />,
+            text: "MÓDULOS",
+            component: 'modules'
+        },
+        {
+            icon: <FaUserPlus />,
+            text: "CREAR USUARIO",
+            component: 'createUser'
+        },
+        {
+            icon: <FaUsers />,
+            text: "LISTA DE USUARIOS",
+            component: 'usersList'
+        },
+        {
+            icon: <FaBookReader />,
+            text: "ASIGNAR DOCENTE",
+            component: 'assignTeacher'
+        },
+        {
+            icon: <FaGavel />,
+            text: "ASIGNAR JURADO",
+            component: 'assignJury'
+        }
     ];
 
     const renderComponent = () => {
         switch (currentComponent) {
+            case 'modules':
+                return <ModuleManagement />;
             case 'createUser':
                 return <CreateUser />;
             case 'usersList':
                 return <UserList />;
+            case 'assignTeacher':
+                return <AssignTeacher />;
+            case 'assignJury':
+                return (
+                    <div className="container">
+                        <h2 className="mb-4">Asignación de Jurado</h2>
+                        <AsignarJurado
+                            onClose={() => setCurrentComponent('welcome')}
+                        />
+                    </div>
+                );
             case 'profile':
                 return <UserProfile />;
             case 'changePassword':
@@ -174,17 +225,17 @@ const PracticaDashboard = () => {
                         className="bg-white p-4 rounded-3 shadow-sm"
                     >
                         <div className="text-center mb-4">
-                            <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
-                            <p className="text-muted">Usuario: {user?.username} | Rol: {user?.rol}</p>
+                            <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Administración!</h2>
+                            <p className="text-muted">Usuario: {user?.username} | Rol: {roleLabels[user?.rol] || user?.rol}</p>
                         </div>
 
                         <div className="row g-4 mt-2">
                             <div className="col-md-4">
                                 <div className="card h-100 border-0 shadow-sm">
                                     <div className="card-body text-center">
-                                        <FaUsers className="text-primary mb-3" size={40} />
-                                        <h5 className="card-title">Gestión de Usuarios</h5>
-                                        <p className="card-text">Administra los usuarios del sistema, crea nuevas cuentas y gestiona permisos.</p>
+                                        <FaLayerGroup className="text-primary mb-3" size={40} />
+                                        <h5 className="card-title">Gestión de Módulos</h5>
+                                        <p className="card-text">Administra los módulos del sistema y sus configuraciones.</p>
                                     </div>
                                 </div>
                             </div>
@@ -192,9 +243,9 @@ const PracticaDashboard = () => {
                             <div className="col-md-4">
                                 <div className="card h-100 border-0 shadow-sm">
                                     <div className="card-body text-center">
-                                        <FaCalendarCheck className="text-success mb-3" size={40} />
-                                        <h5 className="card-title">Evaluaciones Diarias</h5>
-                                        <p className="card-text">Realiza seguimiento y evaluación del desempeño diario de los estudiantes.</p>
+                                        <FaBookReader className="text-success mb-3" size={40} />
+                                        <h5 className="card-title">Asignación de Docentes</h5>
+                                        <p className="card-text">Gestiona la asignación de docentes a los diferentes módulos.</p>
                                     </div>
                                 </div>
                             </div>
@@ -202,9 +253,9 @@ const PracticaDashboard = () => {
                             <div className="col-md-4">
                                 <div className="card h-100 border-0 shadow-sm">
                                     <div className="card-body text-center">
-                                        <FaChalkboardTeacher className="text-info mb-3" size={40} />
-                                        <h5 className="card-title">Evaluación de Exposiciones</h5>
-                                        <p className="card-text">Gestiona y califica las presentaciones y exposiciones de los estudiantes.</p>
+                                        <FaGavel className="text-info mb-3" size={40} />
+                                        <h5 className="card-title">Asignación de Jurados</h5>
+                                        <p className="card-text">Administra la asignación de jurados evaluadores.</p>
                                     </div>
                                 </div>
                             </div>
@@ -213,20 +264,28 @@ const PracticaDashboard = () => {
                         <div className="mt-4 p-3 bg-light rounded-3">
                             <h4 className="text-secondary mb-3">Accesos Rápidos</h4>
                             <div className="row g-3">
-                                <div className="col-md-6">
+                                <div className="col-md-4">
                                     <button
                                         className="btn btn-outline-primary w-100"
-                                        onClick={() => setCurrentComponent('createUser')}
+                                        onClick={() => setCurrentComponent('modules')}
                                     >
-                                        <FaUserPlus className="me-2" /> Crear Nuevo Usuario
+                                        <FaLayerGroup className="me-2" /> Gestionar Módulos
                                     </button>
                                 </div>
-                                <div className="col-md-6">
+                                <div className="col-md-4">
                                     <button
                                         className="btn btn-outline-success w-100"
-                                        onClick={() => setCurrentComponent('usersList')}
+                                        onClick={() => setCurrentComponent('assignTeacher')}
                                     >
-                                        <FaUsers className="me-2" /> Ver Lista de Usuarios
+                                        <FaBookReader className="me-2" /> Asignar Docentes
+                                    </button>
+                                </div>
+                                <div className="col-md-4">
+                                    <button
+                                        className="btn btn-outline-info w-100"
+                                        onClick={() => setCurrentComponent('assignJury')}
+                                    >
+                                        <FaGavel className="me-2" /> Asignar Jurados
                                     </button>
                                 </div>
                             </div>
@@ -289,14 +348,14 @@ const PracticaDashboard = () => {
                         </button>
 
                         <Navbar.Brand className="text-info fw-bold fs-3 ms-3">
-                            {user?.rol}
+                            {roleLabels[user?.rol] || user?.rol}
                         </Navbar.Brand>
 
                         <UserMenu align="end">
                             <UserMenu.Toggle as="div">
                                 <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
                                     <div className="user-details">
-                                        <span className="fw-bold">usuario: {user?.username}</span>
+                                        <span className="fw-bold">{user?.username}</span>
                                     </div>
                                     <FaUserCircle size={35} />
                                 </UserInfo>

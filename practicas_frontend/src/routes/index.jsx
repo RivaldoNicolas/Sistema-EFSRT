@@ -10,6 +10,9 @@ import DocenteDashboard from '../components/Dashboard/DocenteDashboard';
 import JuradosDashboard from '../components/Dashboard/JuradosDashboard';
 import SecretariaDashboard from '../components/Dashboard/SecretariaDashboard';
 import CoordinadorDashboard from '../components/Dashboard/CoordinadorDashboard';
+import AsignacionesModulo from '../components/Modulos/AsignacionesModulo';
+import AsignarJurado from '../components/Modulos/AsignarJurado';
+import AsignarDocente from '../components/Modulos/AsignarDocente';
 
 const AppRoutes = () => {
     return (
@@ -33,7 +36,7 @@ const AppRoutes = () => {
                 </PrivateRoute>
             } />
             <Route path="/fua/dashboard" element={
-                <PrivateRoute>3
+                <PrivateRoute>
                     <FuaDashboard />
                 </PrivateRoute>
             } />
@@ -55,6 +58,23 @@ const AppRoutes = () => {
             <Route path="/coordinador/dashboard" element={
                 <PrivateRoute>
                     <CoordinadorDashboard />
+                </PrivateRoute>
+            } />
+
+            {/* Nuevas rutas para asignaciones */}
+            <Route path="/modulos/:id/asignaciones" element={
+                <PrivateRoute>
+                    <AsignacionesModulo />
+                </PrivateRoute>
+            } />
+            <Route path="/modulos/:id/asignar-jurado" element={
+                <PrivateRoute>
+                    <AsignarJurado />
+                </PrivateRoute>
+            } />
+            <Route path="/modulos/:id/asignar-docente" element={
+                <PrivateRoute>
+                    <AsignarDocente />
                 </PrivateRoute>
             } />
         </Routes>

@@ -132,6 +132,18 @@ const Overlay = styled.div`
   }
 `;
 
+const roleLabels = {
+    'ADMIN': 'Administrador General',
+    'FUA': 'Encargado FUA',
+    'PRACTICAS': 'Encargado EFSRT',
+    'COORDINADOR': 'Coordinador Academico',
+    'SECRETARIA': 'Secretaria',
+    'DOCENTE': 'Docente',
+    'ESTUDIANTE': 'Estudiante',
+    'JURADO': 'Jurado Evaluador'
+};
+
+
 const EstudianteDashboard = () => {
     const [currentComponent, setCurrentComponent] = useState('welcome');
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -289,7 +301,7 @@ const EstudianteDashboard = () => {
                         </button>
 
                         <Navbar.Brand className="text-info fw-bold fs-3 ms-3">
-                            {user?.rol}
+                            {roleLabels[user?.rol] || user?.rol}
                         </Navbar.Brand>
 
                         <UserMenu align="end">

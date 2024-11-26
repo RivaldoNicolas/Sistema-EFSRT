@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
@@ -129,24 +130,73 @@ class ModuloPracticasViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['nombre', 'tipo_modulo']
     filterset_fields = ['tipo_modulo', 'activo']
+    parser_classes = (MultiPartParser, FormParser)
 
-    @action(detail=True, methods=['post'])
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)  # Set partial=True to allow partial updates
+        instance = self.get_object()
+        
+        # Handle file upload separately if present
+        if 'estructura_informe' in request.FILES:
+            instance.estructura_informe = request.FILES['estructura_informe']
+            
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['post'], url_path='asignar-jurado')
     def asignar_jurado(self, request, pk=None):
-        modulo = self.get_object()
-        jurado_id = request.data.get('jurado_id')
-        
-        # Crear la asignación del jurado
-        AsignacionJurado.objects.create(
-            practica=Practica.objects.get(modulo=modulo),
-            jurado_id=jurado_id,
-            fecha_asignacion=timezone.now().date()
-        )
-        
-        return Response({
-            'message': 'Jurado asignado exitosamente',
-            'modulo': modulo.id,
-            'jurado_id': jurado_id
-        }, status=status.HTTP_201_CREATED)
+        try:
+            modulo = self.get_object()
+            jurado_id = request.data.get('jurado')
+            
+            jurado = Usuario.objects.get(id=jurado_id, rol='JURADO')
+            
+            practica = Practica.objects.get(modulo=modulo)
+            
+            asignacion = AsignacionJurado.objects.create(
+                practica=practica,
+                jurado=jurado,
+                fecha_asignacion=timezone.now().date()
+            )
+            
+            return Response({
+                'status': 'success',
+                'message': 'Jurado asignado correctamente',
+                'data': {
+                    'asignacion_id': asignacion.id,
+                    'jurado': {
+                        'id': jurado.id,
+                        'nombre': f"{jurado.first_name} {jurado.last_name}"
+                    }
+                }
+            }, status=status.HTTP_201_CREATED)
+            
+        except Usuario.DoesNotExist:
+            return Response({
+                'message': 'El jurado seleccionado no existe o no tiene el rol correcto'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Practica.DoesNotExist:
+            return Response({
+                'message': 'No existe una práctica asociada a este módulo'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response({
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class PracticaViewSet(viewsets.ModelViewSet):
     serializer_class = PracticaSerializer

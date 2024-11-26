@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
 import CreateUser from './Users/CreateUser';
@@ -150,11 +150,19 @@ const AdminDashboard = () => {
 
   const menuItems = [
     { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
-    { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
-    { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
-    { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-    { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
+    { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' }
   ];
+
+  const roleLabels = {
+    'ADMIN': 'Administrador General',
+    'FUA': 'Encargado FUA',
+    'PRACTICAS': 'Encargado EFSRT',
+    'COORDINADOR': 'Coordinador Academico',
+    'SECRETARIA': 'Secretaria',
+    'DOCENTE': 'Docente',
+    'ESTUDIANTE': 'Estudiante',
+    'JURADO': 'Jurado Evaluador'
+  };
 
   const renderComponent = () => {
     switch (currentComponent) {
@@ -175,7 +183,7 @@ const AdminDashboard = () => {
           >
             <div className="text-center mb-4">
               <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
-              <p className="text-muted">Usuario: {user?.username} | Rol: {user?.rol}</p>
+              <p className="text-muted">Usuario: {user?.username} | Rol: {roleLabels[user?.rol] || user?.rol}</p>
             </div>
 
             <div className="row g-4 mt-2">
@@ -289,14 +297,14 @@ const AdminDashboard = () => {
             </button>
 
             <Navbar.Brand className="text-info fw-bold fs-3 ms-3">
-              {user?.rol}
+              {roleLabels[user?.rol] || user?.rol}
             </Navbar.Brand>
 
             <UserMenu align="end">
               <UserMenu.Toggle as="div">
                 <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
                   <div className="user-details">
-                    <span className="fw-bold">usuario: {user?.username}</span>
+                    <span className="fw-bold">{user?.username}</span>
                   </div>
                   <FaUserCircle size={35} />
                 </UserInfo>

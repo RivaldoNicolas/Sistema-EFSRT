@@ -4,8 +4,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { FaUser, FaEnvelope, FaIdCard, FaUserTag, FaPhone, FaMapMarkerAlt, FaBirthdayCake } from 'react-icons/fa';
-import EditProfile from './EditProfile';  // Add this import
-
+import EditProfile from './EditProfile';
 const ProfileCard = styled(Card)`
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: none;
@@ -28,6 +27,17 @@ const EditButton = styled(Button)`
   top: 20px;
   right: 20px;
 `;
+
+const roleLabels = {
+    'ADMIN': 'Administrador General',
+    'FUA': 'Encargado FUA',
+    'PRACTICAS': 'Encargado EFSRT',
+    'COORDINADOR': 'Coordinador Academico',
+    'SECRETARIA': 'Secretaria',
+    'DOCENTE': 'Docente',
+    'ESTUDIANTE': 'Estudiante',
+    'JURADO': 'Jurado Evaluador'
+};
 
 
 const UserProfile = () => {
@@ -63,7 +73,7 @@ const UserProfile = () => {
                                         <FaUser size={60} className="text-primary" />
                                     </div>
                                     <h5>{user?.username}</h5>
-                                    <p className="text-muted">{user?.rol}</p>
+                                    <p className="text-muted">{roleLabels[user?.rol] || user?.rol}</p>
                                 </Col>
                                 <Col md={8}>
                                     <Table hover responsive>
@@ -82,7 +92,7 @@ const UserProfile = () => {
                                             </DataRow>
                                             <DataRow>
                                                 <DataLabel><FaUserTag className="me-2 text-primary" /> Rol:</DataLabel>
-                                                <td>{user?.rol}</td>
+                                                <td>{roleLabels[user?.rol] || user?.rol}</td>
                                             </DataRow>
                                             <DataRow>
                                                 <DataLabel><FaUser className="me-2 text-primary" /> Nombre:</DataLabel>
