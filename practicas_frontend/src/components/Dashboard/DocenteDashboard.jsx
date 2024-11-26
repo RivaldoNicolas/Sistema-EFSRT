@@ -5,12 +5,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaUserPlus, FaBars, FaKey, FaCheck } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
 import CreateUser from './Users/CreateUser';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
+import DocenteDiari from './Docente/DocenteDiario';
+import DiarioNot from './Docente/DiarioNota';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -161,13 +163,8 @@ const DocenteDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
-        { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
-        { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
-        { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-        { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
-    ];
-
+        { icon: <FaCheck />, text: "CALIFICACIONES DIARIAS", component: 'diariod' },
+    ]
     const renderComponent = () => {
         switch (currentComponent) {
             case 'createUser':
@@ -178,6 +175,10 @@ const DocenteDashboard = () => {
                 return <UserProfile />;
             case 'changePassword':
                 return <ChangePassword />;
+            case 'diariod':
+                return <DocenteDiari setCurrentComponent={setCurrentComponent} />;
+            case 'diariodnot':
+                return <DiarioNot setCurrentComponent={setCurrentComponent} />;
             default:
                 return (
                     <motion.div

@@ -15,7 +15,7 @@ router = DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet)
 router.register(r'gestionar-estudiantes', GestionarEstudiantesViewSet, basename='gestion-estudiantes')
 router.register(r'gestionar-docentes', GestionarDocentesViewSet, basename='gestion-docentes')
-
+    
 # Module and practice routes
 router.register(r'modulos', ModuloPracticasViewSet, basename='modulos')
 router.register(r'practicas', PracticaViewSet, basename='practica')

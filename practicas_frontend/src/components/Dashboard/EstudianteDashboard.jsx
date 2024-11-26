@@ -11,6 +11,9 @@ import ChangePassword from './Users/ChangePassword';
 import CreateUser from './Users/CreateUser';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
+import EvaluacionE from './Estudiante/EvaluacionE';
+import EvaluacionD from './Estudiante/EvaluacionD';
+import Asistencia from './Estudiante/Asistencia';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -161,17 +164,21 @@ const EstudianteDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
-        { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
-        { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
+        { icon: <FaUserPlus />, text: "ASISTENCIA", component: 'asistencia' },
+        { icon: <FaUsers />, text: "EVALUACION DIARIA", component: 'evaluacionD' },
+        { icon: <FaCalendarCheck />, text: "EVALUACIÓN INFORME", component: 'evaluacionE' },
         { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-        { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
+        { icon: <FaFileAlt />, text: "EVALUACIÓN DE EXPOSICIÓN" },
     ];
 
     const renderComponent = () => {
         switch (currentComponent) {
-            case 'createUser':
-                return <CreateUser />;
+            case 'asistencia':
+                return <Asistencia />;
+            case 'evaluacionD':
+                return <EvaluacionD />;
+            case 'evaluacionE':
+                return <EvaluacionE />;
             case 'usersList':
                 return <UserList />;
             case 'profile':

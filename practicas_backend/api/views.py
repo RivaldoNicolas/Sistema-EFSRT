@@ -7,6 +7,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+
 from django.utils import timezone
 from datetime import timedelta
 from .models import *
@@ -153,15 +155,20 @@ class ModuloPracticasViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=True, methods=['post'], url_path='asignar-jurado')
+    @action(detail=True, methods=['post'], url_path='asignar-jurado', parser_classes=(JSONParser, MultiPartParser, FormParser))
     def asignar_jurado(self, request, pk=None):
         try:
             modulo = self.get_object()
             jurado_id = request.data.get('jurado')
             
+            # Agregar logs para debugging
+            print(f"Jurado ID recibido: {jurado_id}")
+            
             jurado = Usuario.objects.get(id=jurado_id, rol='JURADO')
+            print(f"Jurado encontrado: {jurado.username}")
             
             practica = Practica.objects.get(modulo=modulo)
+            print(f"Práctica encontrada: {practica.id}")
             
             asignacion = AsignacionJurado.objects.create(
                 practica=practica,
@@ -180,21 +187,17 @@ class ModuloPracticasViewSet(viewsets.ModelViewSet):
                     }
                 }
             }, status=status.HTTP_201_CREATED)
-            
+        
         except Usuario.DoesNotExist:
             return Response({
-                'message': 'El jurado seleccionado no existe o no tiene el rol correcto'
+                'message': f'El jurado con ID {jurado_id} no existe o no tiene el rol JURADO'
             }, status=status.HTTP_400_BAD_REQUEST)
-            
+        
         except Practica.DoesNotExist:
             return Response({
-                'message': 'No existe una práctica asociada a este módulo'
+                'message': f'No existe una práctica asociada al módulo {modulo.id}'
             }, status=status.HTTP_400_BAD_REQUEST)
-            
-        except Exception as e:
-            return Response({
-                'message': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
