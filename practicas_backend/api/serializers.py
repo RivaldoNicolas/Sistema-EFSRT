@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Usuario, Estudiante,ModuloPracticas, Practica, Asistencia, Informe, Evaluacion, AsignacionDocente, AsignacionJurado
 from django.core.validators import MinValueValidator, MaxValueValidator
+
+
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
 
@@ -123,12 +125,9 @@ class AsignacionDocenteSerializer(serializers.ModelSerializer):
         fields = ['id', 'docente', 'modulo', 'fecha_asignacion']
 
 class AsignacionJuradoSerializer(serializers.ModelSerializer):
-    jurado = UsuarioSerializer(read_only=True)
-    
     class Meta:
         model = AsignacionJurado
-        fields = ['id', 'practica', 'jurado', 
-                 'fecha_asignacion', 'fecha_evaluacion']
+        fields = ['practica', 'jurado', 'fecha_asignacion', 'fecha_evaluacion']
 
 class EstudianteSerializer(serializers.ModelSerializer):
     class Meta:

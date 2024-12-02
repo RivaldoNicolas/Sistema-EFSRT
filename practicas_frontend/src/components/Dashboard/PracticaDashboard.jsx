@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Nav, Navbar, Dropdown } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaUserPlus, FaBars, FaKey, FaBookReader, FaGavel, FaLayerGroup } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaUserPlus, FaBars, FaKey, FaBookReader, FaGavel, FaLayerGroup, FaPlus } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
-import CreateUser from './Users/CreateUser';
-import UserList from './Users/UserList';
+import DocenteJuradoList from '../jurados/DocenteJuradoList';
 import UserProfile from './Users/UserProfile';
 import ModuleManagement from '../Modulos/ModuleManagement';
-import AsignarJurado from '../Modulos/AsignarJurado';
-
+import CrearDocenteJurado from '../jurados/CrearDocenteJurado';
+import JuradoManagement from '../jurados/JuradoManagement';
+import AsignarDocente from '../Modulos/AsignarDocente';
+import PracticaManagement from '../Practicas/PracticaManagement';
 
 
 const DashboardContainer = styled(Container)`
@@ -157,6 +158,7 @@ const PracticaDashboard = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+
     const handleLogout = () => {
         dispatch(logout());
         dispatch(showAlert({
@@ -191,6 +193,12 @@ const PracticaDashboard = () => {
             icon: <FaGavel />,
             text: "ASIGNAR JURADO",
             component: 'assignJury'
+        },
+
+        {
+            icon: <FaPlus />,
+            text: "PRACTICA MANAGEMENT",
+            component: 'createPracticas'
         }
     ];
 
@@ -199,20 +207,15 @@ const PracticaDashboard = () => {
             case 'modules':
                 return <ModuleManagement />;
             case 'createUser':
-                return <CreateUser />;
+                return <CrearDocenteJurado />;
             case 'usersList':
-                return <UserList />;
+                return <DocenteJuradoList />;
             case 'assignTeacher':
-                return <AssignTeacher />;
+                return <AsignarDocente />;
+            case 'createPracticas':
+                return <PracticaManagement />;
             case 'assignJury':
-                return (
-                    <div className="container">
-                        <h2 className="mb-4">Asignación de Jurado</h2>
-                        <AsignarJurado
-                            onClose={() => setCurrentComponent('welcome')}
-                        />
-                    </div>
-                );
+                return <JuradoManagement />;
             case 'profile':
                 return <UserProfile />;
             case 'changePassword':
@@ -225,7 +228,7 @@ const PracticaDashboard = () => {
                         className="bg-white p-4 rounded-3 shadow-sm"
                     >
                         <div className="text-center mb-4">
-                            <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Administración!</h2>
+                            <h2 className="text-primary fw-bold">¡Bienvenido al Dashboard! {roleLabels[user?.rol] || user?.rol}</h2>
                             <p className="text-muted">Usuario: {user?.username} | Rol: {roleLabels[user?.rol] || user?.rol}</p>
                         </div>
 
@@ -325,7 +328,7 @@ const PracticaDashboard = () => {
                             <NavItem
                                 key={index}
                                 whileHover={{ x: 5 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileTap={{ scale: 0.95 }} x
                                 onClick={() => {
                                     setCurrentComponent(item.component);
                                     setSidebarOpen(false);
@@ -381,7 +384,11 @@ const PracticaDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="mt-4"
                     >
-                        {renderComponent()}
+                        {window.location.pathname.includes('/modulos/') ? (
+                            <Outlet />
+                        ) : (
+                            renderComponent()
+                        )}
                     </motion.div>
                 </MainContent>
             </Row>

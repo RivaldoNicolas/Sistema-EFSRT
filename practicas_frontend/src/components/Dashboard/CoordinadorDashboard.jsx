@@ -270,3 +270,4 @@ const CoordinadorDashboard = () => {
 }
 
 export default CoordinadorDashboard;
+

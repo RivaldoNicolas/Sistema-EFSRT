@@ -2,6 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { asignarJurado } from "./moduloSlice";
 
+export const fetchUsers = createAsyncThunk("users/fetchAll", async () => {
+  const response = await api.get("/usuarios/");
+  return response.data;
+});
+
 export const fetchUsersByRole = createAsyncThunk(
   "users/fetchUsersByRole",
   async (rol, { getState }) => {
@@ -55,11 +60,15 @@ export const updateUserProfile = createAsyncThunk(
     }
   }
 );
+
 const userSlice = createSlice({
   name: "users",
   initialState: {
     users: [],
+    items: [],
+    estudiantes: [],
     loading: false,
+    status: "idle",
     error: null,
     updateStatus: "idle",
     updateError: null,
@@ -82,6 +91,18 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      .addCase(fetchUsers.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.items = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
       .addCase(asignarJurado.fulfilled, (state, action) => {
         const juradoId = action.payload.jurado?.id;
         if (juradoId) {

@@ -8,7 +8,6 @@ import styled from 'styled-components';
 import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
-import CreateUser from './Users/CreateUser';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
 import EvaluacionE from './Estudiante/EvaluacionE';
@@ -167,8 +166,6 @@ const EstudianteDashboard = () => {
         { icon: <FaUserPlus />, text: "ASISTENCIA", component: 'asistencia' },
         { icon: <FaUsers />, text: "EVALUACION DIARIA", component: 'evaluacionD' },
         { icon: <FaCalendarCheck />, text: "EVALUACIÓN INFORME", component: 'evaluacionE' },
-        { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-        { icon: <FaFileAlt />, text: "EVALUACIÓN DE EXPOSICIÓN" },
     ];
 
     const renderComponent = () => {

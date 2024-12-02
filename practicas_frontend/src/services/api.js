@@ -63,6 +63,26 @@ api.interceptors.response.use(
       }
     }
 
+    // Handle 500 Internal Server Error
+    if (error.response?.status === 500) {
+      const errorMessage =
+        error.response.data?.message || "Error interno del servidor";
+
+      store.dispatch(
+        showAlert({
+          type: "error",
+          message: errorMessage,
+        })
+      );
+
+      console.error("Server Error Details:", {
+        endpoint: originalRequest.url,
+        method: originalRequest.method,
+        data: originalRequest.data,
+        error: error.response?.data,
+      });
+    }
+
     return Promise.reject(error);
   }
 );

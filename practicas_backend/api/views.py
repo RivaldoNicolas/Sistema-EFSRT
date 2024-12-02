@@ -94,7 +94,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 class EstudianteViewSet(viewsets.ModelViewSet):
     queryset = Estudiante.objects.all()
     serializer_class = EstudianteSerializer
-    permission_classes = [IsAuthenticated, EsAdministrador|EsSecretaria]
+    permission_classes = [IsAuthenticated, EsAdministrador|EsSecretaria|EsEncargadoPracticas]
     filter_backends = [filters.SearchFilter]
     search_fields = ['usuario__username', 'carrera', 'codigo_estudiante']
 
@@ -132,7 +132,7 @@ class ModuloPracticasViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['nombre', 'tipo_modulo']
     filterset_fields = ['tipo_modulo', 'activo']
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (JSONParser,MultiPartParser, FormParser)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -155,51 +155,89 @@ class ModuloPracticasViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=True, methods=['post'], url_path='asignar-jurado', parser_classes=(JSONParser, MultiPartParser, FormParser))
+
+    @action(detail=True, methods=['get'], url_path='listar-jurados')
+    def listar_jurados(self, request, pk=None):
+        modulo = self.get_object()
+        jurados = AsignacionJurado.objects.filter(practica__modulo=modulo).values('jurado__id', 'jurado__username')
+        return Response({'data': jurados})
+
+
+
+    @action(detail=True, methods=['post'], url_path='asignar-jurado')
     def asignar_jurado(self, request, pk=None):
         try:
-            modulo = self.get_object()
-            jurado_id = request.data.get('jurado')
+            modulo = self.get_object()  # Obtén el módulo basado en el `pk`
             
-            # Agregar logs para debugging
-            print(f"Jurado ID recibido: {jurado_id}")
-            
-            jurado = Usuario.objects.get(id=jurado_id, rol='JURADO')
-            print(f"Jurado encontrado: {jurado.username}")
-            
-            practica = Practica.objects.get(modulo=modulo)
-            print(f"Práctica encontrada: {practica.id}")
-            
+            # Obtén IDs del jurado y estudiante del request
+            jurado_id = request.data.get('jurado_id')
+            estudiante_id = request.data.get('estudiante_id')
+
+            if not jurado_id or not estudiante_id:
+                raise ValidationError("Debe proporcionar 'jurado_id' y 'estudiante_id'.")
+
+            # Validar existencia de jurado y estudiante
+            try:
+                jurado = Usuario.objects.get(id=jurado_id, rol='JURADO')
+            except Usuario.DoesNotExist:
+                return Response({
+                    'status': 'error',
+                    'message': f"Jurado con ID {jurado_id} no encontrado o no es un jurado."
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                estudiante = Usuario.objects.get(id=estudiante_id, rol='ESTUDIANTE')
+            except Usuario.DoesNotExist:
+                return Response({
+                    'status': 'error',
+                    'message': f"Estudiante con ID {estudiante_id} no encontrado o no es un estudiante."
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            # Crear o recuperar la práctica
+            practica, created = Practica.objects.get_or_create(
+                estudiante=estudiante,
+                modulo=modulo,
+                defaults={
+                    'fecha_inicio': timezone.now().date(),
+                    'fecha_fin': timezone.now().date() + timedelta(days=30),
+                    'estado': 'PENDIENTE'
+                }
+            )
+
+            # Validar si el jurado ya está asignado a esta práctica
+            if AsignacionJurado.objects.filter(practica=practica, jurado=jurado).exists():
+                return Response({
+                    'status': 'error',
+                    'message': 'El jurado ya está asignado a esta práctica.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Crear asignación del jurado
             asignacion = AsignacionJurado.objects.create(
                 practica=practica,
                 jurado=jurado,
                 fecha_asignacion=timezone.now().date()
             )
-            
+
             return Response({
                 'status': 'success',
-                'message': 'Jurado asignado correctamente',
+                'message': 'Jurado asignado correctamente.',
                 'data': {
                     'asignacion_id': asignacion.id,
-                    'jurado': {
-                        'id': jurado.id,
-                        'nombre': f"{jurado.first_name} {jurado.last_name}"
-                    }
+                    'practica_id': practica.id
                 }
-            }, status=status.HTTP_201_CREATED)
-        
-        except Usuario.DoesNotExist:
+            })
+
+        except ValidationError as e:
             return Response({
-                'message': f'El jurado con ID {jurado_id} no existe o no tiene el rol JURADO'
+                'status': 'error',
+                'message': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
-        
-        except Practica.DoesNotExist:
+        except Exception as e:
             return Response({
-                'message': f'No existe una práctica asociada al módulo {modulo.id}'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-
-
+                'status': 'error',
+                'message': f"Error inesperado: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
 class PracticaViewSet(viewsets.ModelViewSet):
     serializer_class = PracticaSerializer

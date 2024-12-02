@@ -17,7 +17,7 @@ router.register(r'gestionar-estudiantes', GestionarEstudiantesViewSet, basename=
 router.register(r'gestionar-docentes', GestionarDocentesViewSet, basename='gestion-docentes')
     
 # Module and practice routes
-router.register(r'modulos', ModuloPracticasViewSet, basename='modulos')
+router.register(r'modulos', ModuloPracticasViewSet,basename='modulos')
 router.register(r'practicas', PracticaViewSet, basename='practica')
 
 # Monitoring and evaluation routes

@@ -58,6 +58,7 @@ const ListarModulos = ({ onModuleSelect }) => {
 
     const handleRowClick = (modulo) => {
         onModuleSelect(modulo);
+        navigate(`/practicas/dashboard/modulos/${modulo.id}/asignaciones`);
     };
 
     if (loading) {

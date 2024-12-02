@@ -31,6 +31,8 @@ class Estudiante(models.Model):
     carrera = models.CharField(max_length=100)
     ciclo = models.IntegerField()
     codigo_estudiante = models.CharField(max_length=20, unique=True)
+    def __str__(self):
+        return f"{self.usuario.username} - {self.carrera}"
 
     def save(self, *args, **kwargs):
         self.usuario.rol = 'ESTUDIANTE'

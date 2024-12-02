@@ -10,9 +10,6 @@ import DocenteDashboard from '../components/Dashboard/DocenteDashboard';
 import JuradosDashboard from '../components/Dashboard/JuradosDashboard';
 import SecretariaDashboard from '../components/Dashboard/SecretariaDashboard';
 import CoordinadorDashboard from '../components/Dashboard/CoordinadorDashboard';
-import AsignacionesModulo from '../components/Modulos/AsignacionesModulo';
-import AsignarJurado from '../components/Modulos/AsignarJurado';
-import AsignarDocente from '../components/Modulos/AsignarDocente';
 
 const AppRoutes = () => {
     return (
@@ -20,16 +17,21 @@ const AppRoutes = () => {
             <Route path="/" element={<Layout />} />
             <Route path="/login" element={<Login />} />
 
+            {/* Admin Routes */}
             <Route path="/admin/dashboard" element={
                 <PrivateRoute>
                     <AdminDashboard />
                 </PrivateRoute>
             } />
+
+            {/* Prácticas Routes with Nested Routes */}
             <Route path="/practicas/dashboard" element={
                 <PrivateRoute>
                     <PracticaDashboard />
                 </PrivateRoute>
             } />
+
+            {/* Other Dashboard Routes */}
             <Route path="/estudiante/dashboard" element={
                 <PrivateRoute>
                     <EstudianteDashboard />
@@ -58,23 +60,6 @@ const AppRoutes = () => {
             <Route path="/coordinador/dashboard" element={
                 <PrivateRoute>
                     <CoordinadorDashboard />
-                </PrivateRoute>
-            } />
-
-            {/* Nuevas rutas para asignaciones */}
-            <Route path="/modulos/:id/asignaciones" element={
-                <PrivateRoute>
-                    <AsignacionesModulo />
-                </PrivateRoute>
-            } />
-            <Route path="/modulos/:id/asignar-jurado" element={
-                <PrivateRoute>
-                    <AsignarJurado />
-                </PrivateRoute>
-            } />
-            <Route path="/modulos/:id/asignar-docente" element={
-                <PrivateRoute>
-                    <AsignarDocente />
                 </PrivateRoute>
             } />
         </Routes>

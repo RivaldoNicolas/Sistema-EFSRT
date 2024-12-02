@@ -8,9 +8,10 @@ import styled from 'styled-components';
 import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
-import CreateUser from './Users/CreateUser';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
+import CrearEstudiante from './Estudiante/CrearEstudiante';
+import ListaEstudiante from './Estudiante/ListaEstudiante';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -161,19 +162,16 @@ const SecretariaDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaUserPlus />, text: "CREAR USUARIO", component: 'createUser' },
-        { icon: <FaUsers />, text: "LISTA DE USUARIOS", component: 'usersList' },
-        { icon: <FaCalendarCheck />, text: "EVALUACIÓN DIARIA" },
-        { icon: <FaChalkboardTeacher />, text: "EVALUACIÓN DE EXPOSICIÓN" },
-        { icon: <FaFileAlt />, text: "EVALUACIÓN DE INFORME" }
+        { icon: <FaUserPlus />, text: "AÑADIR ESTUDIANTE", component: 'CrearEstudiante' },
+        { icon: <FaUsers />, text: "LISTA DE ESTUDIANTES", component: 'ListaEstudiante' },
     ];
 
     const renderComponent = () => {
         switch (currentComponent) {
-            case 'createUser':
-                return <CreateUser />;
-            case 'usersList':
-                return <UserList />;
+            case 'CrearEstudiante':
+                return <CrearEstudiante />;
+            case 'ListaEstudiante':
+                return <ListaEstudiante />;
             case 'profile':
                 return <UserProfile />;
             case 'changePassword':
@@ -187,7 +185,7 @@ const SecretariaDashboard = () => {
                     >
                         <div className="text-center mb-4">
                             <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
-                            <p className="text-muted">Usuario: {user?.username} | Rol: {user?.rol}</p>
+                            <p className="text-muted"> {user?.username} | Rol: {user?.rol}</p>
                         </div>
 
                         <div className="row g-4 mt-2">
@@ -308,7 +306,7 @@ const SecretariaDashboard = () => {
                             <UserMenu.Toggle as="div">
                                 <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
                                     <div className="user-details">
-                                        <span className="fw-bold">usuario: {user?.username}</span>
+                                        <span className="fw-bold">{user?.username}</span>
                                     </div>
                                     <FaUserCircle size={35} />
                                 </UserInfo>

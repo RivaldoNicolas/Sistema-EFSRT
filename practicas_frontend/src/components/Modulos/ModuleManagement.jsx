@@ -1,49 +1,29 @@
 import React, { useState } from 'react';
 import { Button, Row, Col } from 'react-bootstrap';
+import { useNavigate, useLocation } from 'react-router-dom';
 import CrearModulo from './CrearModulo';
 import ListarModulos from './ListarModulos';
-import AsignarJurado from './AsignarJurado';
-import AsignarDocente from './AsignarDocente';
-import AsignacionesModulo from './AsignacionesModulo';
 
 const ModuleManagement = () => {
     const [currentView, setCurrentView] = useState('list');
     const [selectedModulo, setSelectedModulo] = useState(null);
+    const navigate = useNavigate();
+    const location = useLocation();
 
+    const handleModuleSelect = (modulo) => {
+        setSelectedModulo(modulo);
+        // Update the path to match your route configuration
+        navigate(`modulos/${modulo.id}/asignaciones`, { state: { moduloData: modulo } });
+    };
     const renderView = () => {
         switch (currentView) {
             case 'create':
                 return <CrearModulo onClose={() => setCurrentView('list')} />;
-            case 'asignaciones':
-                return (
-                    <AsignacionesModulo
-                        moduloData={selectedModulo}
-                        onBack={() => setCurrentView('list')}
-                        onAsignarJurado={() => setCurrentView('asignarJurado')}
-                        onAsignarDocente={() => setCurrentView('asignarDocente')}
-                    />
-                );
-            case 'asignarJurado':
-                return (
-                    <AsignarJurado
-                        moduloId={selectedModulo.id}
-                        onClose={() => setCurrentView('asignaciones')}
-                    />
-                );
-            case 'asignarDocente':
-                return (
-                    <AsignarDocente
-                        moduloId={selectedModulo.id}
-                        onClose={() => setCurrentView('asignaciones')}
-                    />
-                );
+            case 'list':
             default:
                 return (
                     <ListarModulos
-                        onModuleSelect={(modulo) => {
-                            setSelectedModulo(modulo);
-                            setCurrentView('asignaciones');
-                        }}
+                        onModuleSelect={handleModuleSelect}
                     />
                 );
         }

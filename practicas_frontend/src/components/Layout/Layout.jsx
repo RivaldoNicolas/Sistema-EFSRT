@@ -4,12 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import '../../styles/Layout.css';
 
-const navegacion = [
-    { nombre: 'Inicio', ruta: '/' },
-    { nombre: 'Nosotros', ruta: '/nosotros' },
-    { nombre: 'Servicios', ruta: '/servicios' },
-    { nombre: 'Institución', ruta: '/institucion' },
-];
 
 export default function Layout() {
     const [menuMovilVisible, setMenuMovilVisible] = useState(false);
@@ -37,16 +31,6 @@ export default function Layout() {
                     {/* Menú principal */}
                     <Navbar.Collapse id="navbarScroll" className="justify-content-between">
                         <Nav className="mx-auto">
-                            {navegacion.map((item) => (
-                                <Nav.Link
-                                    key={item.nombre}
-                                    as={Link}
-                                    to={item.ruta}
-                                    className="fw-semibold text-dark mx-3"
-                                >
-                                    {item.nombre}
-                                </Nav.Link>
-                            ))}
                         </Nav>
                         <Nav>
                             <Nav.Link as={Link} to="/login" className="fw-semibold text-dark">
@@ -70,17 +54,6 @@ export default function Layout() {
                 </Offcanvas.Header>
                 <Offcanvas.Body>
                     <Nav className="flex-column">
-                        {navegacion.map((item) => (
-                            <Nav.Link
-                                key={item.nombre}
-                                as={Link}
-                                to={item.ruta}
-                                className="fw-semibold text-dark py-2"
-                                onClick={() => setMenuMovilVisible(false)}
-                            >
-                                {item.nombre}
-                            </Nav.Link>
-                        ))}
                         <Nav.Link
                             as={Link}
                             to="/login"

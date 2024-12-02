@@ -8,6 +8,45 @@ export const fetchModulos = createAsyncThunk(
     return response.data;
   }
 );
+
+export const fetchJurados = createAsyncThunk(
+  "modulos/fetchJurados",
+  async () => {
+    const response = await api.get("/usuarios/?rol=JURADO");
+    return response.data;
+  }
+);
+
+export const fetchJuradosAsignados = createAsyncThunk(
+  "modulos/fetchJuradosAsignados",
+  async (moduloId, { getState }) => {
+    const token = getState().auth.token;
+    const response = await api.get(`/modulos/${moduloId}/listar-jurados/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data; // Asegúrate de que el backend devuelve los datos en este formato
+  }
+);
+
+// Agregar o actualizar la acción asignarJurado
+export const asignarJurado = createAsyncThunk(
+  "modulos/asignarJurado",
+  async ({ modulo_id, jurado_id, estudiante_id }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/modulos/${modulo_id}/asignar-jurado/`, {
+        jurado_id,
+        estudiante_id,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error en la asignación desde la API:", error.response);
+      return rejectWithValue(error.response?.data || "Error desconocido");
+    }
+  }
+);
+
 export const fetchModuloDetails = createAsyncThunk(
   "modulos/fetchDetails",
   async (id, { getState }) => {
@@ -75,19 +114,26 @@ export const deleteModulo = createAsyncThunk(
   }
 );
 
-export const asignarJurado = createAsyncThunk(
-  "modulos/asignarJurado",
-  async ({ moduloId, juradoId }, { rejectWithValue }) => {
-    try {
-      const response = await api.post(`/modulos/${moduloId}/asignar-jurado/`, {
-        jurado: juradoId,
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Error al asignar jurado"
-      );
-    }
+export const fetchJuradosDisponibles = createAsyncThunk(
+  "modulos/fetchJuradosDisponibles",
+  async (_, { getState }) => {
+    const token = getState().auth.token;
+    console.log("Fetching jurados...");
+    const response = await api.get("/usuarios/?rol=JURADO", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Jurados response:", response.data);
+    return response.data;
+  }
+);
+
+export const listarJuradosAsignados = createAsyncThunk(
+  "modulos/listarJuradosAsignados",
+  async (moduloId) => {
+    const response = await api.get(`/modulos/${moduloId}/listar-jurados/`);
+    return response.data;
   }
 );
 
@@ -112,7 +158,9 @@ const moduloSlice = createSlice({
     loading: false,
     error: null,
     currentModulo: null,
+    juradosAsignados: [], // Inicializar como un arreglo vacío
     juradoAsignado: null,
+    jurados: [],
   },
   reducers: {
     clearModuloError: (state) => {
@@ -121,26 +169,61 @@ const moduloSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(listarJuradosAsignados.fulfilled, (state, action) => {
+        state.loading = false;
+        state.juradosAsignados = action.payload.data || []; // Asegúrate de acceder a 'data'
+      })
+      .addCase(listarJuradosAsignados.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(listarJuradosAsignados.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+        state.juradosAsignados = [];
+      })
+
       .addCase(asignarJurado.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.asignacionExitosa = false;
       })
       .addCase(asignarJurado.fulfilled, (state, action) => {
-        state.loading = false;
-        state.juradoAsignado = action.payload.data.jurado;
+        console.log("Jurados asignados correctamente:", action.payload);
+        state.juradoAsignado = action.payload.jurado;
+        // Actualiza el módulo en la lista
+        const moduleIndex = state.modulos.findIndex(
+          (modulo) => modulo.id === action.payload.modulo_id
+        );
+        if (moduleIndex !== -1) {
+          state.modulos[moduleIndex].jurado = action.payload.jurado;
+        }
       })
       .addCase(asignarJurado.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.error.message;
+        state.asignacionExitosa = false;
       })
-      .addCase(fetchModulos.pending, (state) => {
+      .addCase(fetchJuradosDisponibles.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchModulos.fulfilled, (state, action) => {
+      .addCase(fetchJuradosDisponibles.fulfilled, (state, action) => {
         state.loading = false;
-        state.modulos = action.payload;
+        state.juradosDisponibles = action.payload;
         state.error = null;
+      })
+      .addCase(fetchJuradosDisponibles.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+        state.juradosDisponibles = [];
+      })
+
+      .addCase(fetchModulos.fulfilled, (state, action) => {
+        state.modulos = action.payload;
+      })
+      .addCase(fetchJurados.fulfilled, (state, action) => {
+        state.jurados = action.payload;
       })
       .addCase(fetchModulos.rejected, (state, action) => {
         state.loading = false;
