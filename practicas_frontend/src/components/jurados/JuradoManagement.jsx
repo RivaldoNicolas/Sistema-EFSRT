@@ -19,13 +19,13 @@ const JuradoManagement = () => {
 
     return (
         <div className="practica-management">
-            <h2>Gestión de Prácticas</h2>
+            <h2>Gestión de Jurados</h2>
             <ButtonGroup className="mb-3">
                 <Button
                     variant={activeComponent === 'listar' ? 'primary' : 'outline-primary'}
                     onClick={() => setActiveComponent('listar')}
                 >
-                    Listar Jurados Asignados A un Modulo
+                    Jurados Asignados
                 </Button>
                 <Button
                     variant={activeComponent === 'crear' ? 'primary' : 'outline-primary'}

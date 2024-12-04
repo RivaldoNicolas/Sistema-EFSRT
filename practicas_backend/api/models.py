@@ -104,8 +104,16 @@ class Practica(models.Model):
 class Asistencia(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
     fecha = models.DateField()
-    hora_entrada = models.TimeField(null=True, blank=True)
-    hora_salida = models.TimeField(null=True, blank=True)
+    asistio = models.CharField(
+        max_length=10,
+        choices=[('ASISTIO', 'Asistió'), ('FALTA', 'Falta')],
+        default='ASISTIO'
+    )
+    puntualidad = models.CharField(
+        max_length=10,
+        choices=[('PUNTUAL', 'Puntual'), ('TARDANZA', 'Tardanza')],
+        default='PUNTUAL'
+    )
     criterios_asistencia = models.JSONField(null=True, blank=True)
     puntaje_diario = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     puntaje_general = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -116,33 +124,26 @@ class Asistencia(models.Model):
             procedimental = Decimal(str(self.criterios_asistencia.get('PROCEDIMENTAL', 0)))
             actitudinal = Decimal(str(self.criterios_asistencia.get('ACTITUDINAL', 0)))
             
-            suma = conceptual + procedimental + actitudinal
-            self.puntaje_diario = suma / 3
-            self.save()
+            self.puntaje_diario = (conceptual + procedimental + actitudinal) / 3
             return self.puntaje_diario
         return Decimal('0.00')
 
     def calcular_puntaje_general(self):
         asistencias = Asistencia.objects.filter(practica=self.practica)
-        total_puntajes = Decimal('0.00')
-        count = 0
+        puntajes_validos = [a.puntaje_diario for a in asistencias if a.puntaje_diario]
         
-        for asistencia in asistencias:
-            if asistencia.puntaje_diario:
-                total_puntajes += asistencia.puntaje_diario
-                count += 1
-        
-        if count > 0:
-            self.puntaje_general = total_puntajes / count
-            self.save()
+        if puntajes_validos:
+            self.puntaje_general = sum(puntajes_validos) / len(puntajes_validos)
             return self.puntaje_general
         return Decimal('0.00')
 
     def save(self, *args, **kwargs):
         if self.criterios_asistencia:
-            self.calcular_puntaje_diario()
+            self.puntaje_diario = self.calcular_puntaje_diario()
         super().save(*args, **kwargs)
-        self.calcular_puntaje_general()
+        self.puntaje_general = self.calcular_puntaje_general()
+        if self.pk:  # Only update if record exists
+            Asistencia.objects.filter(pk=self.pk).update(puntaje_general=self.puntaje_general)
 
 
 class Informe(models.Model):

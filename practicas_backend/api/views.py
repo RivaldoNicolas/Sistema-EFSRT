@@ -293,26 +293,91 @@ class AsistenciaViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = {
         'practica': ['exact'],
-        'fecha': ['exact'],
-        'presente': ['exact']
+        'fecha': ['exact', 'gte', 'lte'],
+        'asistio': ['exact'],
+        'puntualidad': ['exact']
     }
     search_fields = ['practica__estudiante__username']
+
+    def perform_create(self, serializer):
+        asistencia = serializer.save()
+        asistencia.calcular_puntaje_diario()
+        asistencia.calcular_puntaje_general()
+
+    def perform_update(self, serializer):
+        asistencia = serializer.save()
+        asistencia.calcular_puntaje_diario()
+        asistencia.calcular_puntaje_general()
 
 class InformeViewSet(viewsets.ModelViewSet):
     queryset = Informe.objects.all()
     serializer_class = InformeSerializer
-    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['practica', 'aprobado']
     search_fields = ['practica__estudiante__username']
+
+    def get_permissions(self):
+        print(f"User: {self.request.user}")
+        print(f"User Role: {self.request.user.rol}")
+        if self.action == 'create':
+            return [IsAuthenticated(), EsEstudiante()]
+        elif self.action in ['evaluar_informe', 'pendientes_evaluacion']:
+            return [IsAuthenticated(), EsEncargadoPracticas()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
         if user.rol == 'ESTUDIANTE':
             return Informe.objects.filter(practica__estudiante=user)
+        elif user.rol == 'PRACTICAS':
+            return Informe.objects.all()
         elif user.rol == 'DOCENTE':
             return Informe.objects.filter(practica__supervisor=user)
         return Informe.objects.all()
+    
+    def create(self, request, *args, **kwargs):
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()  # Remove estudiante parameter
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    @action(detail=True, methods=['post'])
+    def evaluar_informe(self, request, pk=None):
+        informe = self.get_object()
+        calificacion = request.data.get('calificacion')
+        observaciones = request.data.get('observaciones')
+
+        if not calificacion:
+            return Response(
+                {'error': 'La calificación es requerida'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        informe.calificacion = calificacion
+        informe.observaciones = observaciones
+        informe.evaluado_por = request.user
+        informe.fecha_evaluacion = timezone.now()
+        informe.save()
+
+        # Actualizar nota final
+        practica = informe.practica
+        practica.nota_final = practica.calcular_nota_final()
+        practica.save()
+
+        return Response({
+            'message': 'Informe evaluado exitosamente',
+            'calificacion': informe.calificacion,
+            'nota_final': practica.nota_final
+        })
+
+    @action(detail=False, methods=['get'])
+    def pendientes_evaluacion(self, request):
+        informes = Informe.objects.filter(calificacion__isnull=True)
+        serializer = self.get_serializer(informes, many=True)
+        return Response(serializer.data)
 
 class EvaluacionViewSet(viewsets.ModelViewSet):
     queryset = Evaluacion.objects.all()

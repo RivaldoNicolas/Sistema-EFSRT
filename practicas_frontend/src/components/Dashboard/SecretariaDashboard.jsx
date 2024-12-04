@@ -8,10 +8,9 @@ import styled from 'styled-components';
 import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
-import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
-import CrearEstudiante from './Estudiante/CrearEstudiante';
-import ListaEstudiante from './Estudiante/ListaEstudiante';
+import SubirBoleta from './Estudiante/SubirBoleta';
+
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -162,16 +161,13 @@ const SecretariaDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaUserPlus />, text: "AÑADIR ESTUDIANTE", component: 'CrearEstudiante' },
-        { icon: <FaUsers />, text: "LISTA DE ESTUDIANTES", component: 'ListaEstudiante' },
+        { icon: <FaUsers />, text: "LISTA DE ESTUDIANTES", component: 'subirboleta' },
     ];
 
     const renderComponent = () => {
         switch (currentComponent) {
-            case 'CrearEstudiante':
-                return <CrearEstudiante />;
-            case 'ListaEstudiante':
-                return <ListaEstudiante />;
+            case 'subirboleta':
+                return <SubirBoleta />;
             case 'profile':
                 return <UserProfile />;
             case 'changePassword':

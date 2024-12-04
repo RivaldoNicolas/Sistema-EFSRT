@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Usuario, Estudiante,ModuloPracticas, Practica, Asistencia, Informe, Evaluacion, AsignacionDocente, AsignacionJurado
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from decimal import Decimal
 
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
@@ -61,16 +61,35 @@ class ModuloPracticasSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PracticaSerializer(serializers.ModelSerializer):
+    estudiante = UsuarioSerializer(read_only=True)
+    supervisor = UsuarioSerializer(read_only=True)
+    modulo = ModuloPracticasSerializer(read_only=True)
+    
+    # Add write fields
+    estudiante_id = serializers.IntegerField(write_only=True)
+    supervisor_id = serializers.IntegerField(write_only=True)
+    modulo_id = serializers.IntegerField(write_only=True)
+    
     nota_final = serializers.DecimalField(
-        max_digits=4, 
-        decimal_places=2, 
+        max_digits=4,
+        decimal_places=2,
         validators=[MinValueValidator(0), MaxValueValidator(20)],
         read_only=True
     )
 
     class Meta:
         model = Practica
-        fields = '__all__'
+        fields = [
+            'id',
+            'estudiante', 'estudiante_id',
+            'supervisor', 'supervisor_id',
+            'modulo', 'modulo_id',
+            'fecha_inicio',
+            'fecha_fin',
+            'estado',
+            'nota_final',
+            'horas_completadas'
+        ]
 
     def validate(self, data):
         if data.get('fecha_fin') < data.get('fecha_inicio'):
@@ -78,33 +97,73 @@ class PracticaSerializer(serializers.ModelSerializer):
         if data.get('horas_completadas', 0) < 0:
             raise serializers.ValidationError("Las horas completadas no pueden ser negativas")
         return data
+
+
 class AsistenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asistencia
-        fields = '__all__'
+        fields = [
+            'id',
+            'practica',
+            'fecha',
+            'asistio',
+            'puntualidad',
+            'criterios_asistencia',
+            'puntaje_diario',
+            'puntaje_general'
+        ]
+        read_only_fields = ['puntaje_diario', 'puntaje_general']
 
-    def validate_presente(self, value):
-        if value not in dict(Asistencia.ESTADO_CHOICES):
-            raise serializers.ValidationError("Estado de asistencia inválido")
+    def validate_asistio(self, value):
+        valid_choices = dict(Asistencia._meta.get_field('asistio').choices)
+        if value not in valid_choices:
+            raise serializers.ValidationError(f"Estado de asistencia inválido. Opciones válidas: {list(valid_choices.keys())}")
         return value
 
-    def validate(self, data):
-        if data.get('hora_salida') and data.get('hora_entrada'):
-            if data['hora_salida'] < data['hora_entrada']:
-                raise serializers.ValidationError("La hora de salida debe ser posterior a la hora de entrada")
-        return data
+    def validate_puntualidad(self, value):
+        valid_choices = dict(Asistencia._meta.get_field('puntualidad').choices)
+        if value not in valid_choices:
+            raise serializers.ValidationError(f"Estado de puntualidad inválido. Opciones válidas: {list(valid_choices.keys())}")
+        return value
+
+    def validate_criterios_asistencia(self, value):
+        required_criterios = ['CONCEPTUAL', 'PROCEDIMENTAL', 'ACTITUDINAL']
+        
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Los criterios deben ser un objeto JSON")
+        
+        for criterio in required_criterios:
+            if criterio not in value:
+                raise serializers.ValidationError(f"Falta el criterio {criterio}")
+            
+            try:
+                puntaje = Decimal(str(value[criterio]))
+                if not (0 <= puntaje <= 20):
+                    raise serializers.ValidationError(f"El puntaje de {criterio} debe estar entre 0 y 20")
+            except (TypeError, ValueError):
+                raise serializers.ValidationError(f"El puntaje de {criterio} debe ser un número válido")
+        
+        return value
+
+    def create(self, validated_data):
+        asistencia = Asistencia.objects.create(**validated_data)
+        asistencia.calcular_puntaje_diario()
+        asistencia.calcular_puntaje_general()
+        return asistencia
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
 
 
 class InformeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Informe
-        fields = ['id', 'practica', 'contenido', 
-                 'fecha_entrega', 'aprobado']
-    def validate_contenido(self, value):
-        if len(value.strip()) < 100:
-            raise serializers.ValidationError("El contenido debe tener al menos 100 caracteres")
-        return value
-
+        fields = ['practica', 'documento', 'contenido']
+        read_only_fields = ['fecha_entrega', 'aprobado']
 class EvaluacionSerializer(serializers.ModelSerializer):
     jurado = UsuarioSerializer(read_only=True)
     

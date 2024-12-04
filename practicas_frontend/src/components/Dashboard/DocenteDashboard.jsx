@@ -11,8 +11,8 @@ import ChangePassword from './Users/ChangePassword';
 import CreateUser from './Users/CreateUser';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
-import DocenteDiari from './Docente/DocenteDiario';
-import DiarioNot from './Docente/DiarioNota';
+import DiarioNota from './Docente/DiarioNota';
+import ListaPracticasDocente from './Docente/ListaPracticasDocente';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -149,7 +149,9 @@ const roleLabels = {
 const DocenteDashboard = () => {
     const [currentComponent, setCurrentComponent] = useState('welcome');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [selectedPracticaId, setSelectedPracticaId] = useState(null);
     const user = useSelector(state => state.auth.user);
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -163,7 +165,8 @@ const DocenteDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaCheck />, text: "CALIFICACIONES DIARIAS", component: 'diariod' },
+        { icon: <FaCheck />, text: "LISTAR PRACTICA DOCENTE", component: 'listarpractica' },
+        { icon: <FaCheck />, text: "CALIFICACIONES DIARIAS", component: 'diarionota' },
     ]
     const renderComponent = () => {
         switch (currentComponent) {
@@ -175,10 +178,14 @@ const DocenteDashboard = () => {
                 return <UserProfile />;
             case 'changePassword':
                 return <ChangePassword />;
-            case 'diariod':
-                return <DocenteDiari setCurrentComponent={setCurrentComponent} />;
-            case 'diariodnot':
-                return <DiarioNot setCurrentComponent={setCurrentComponent} />;
+            case 'listarpractica':
+                return <ListaPracticasDocente
+                    setCurrentComponent={setCurrentComponent}
+                    setSelectedPracticaId={setSelectedPracticaId} />;
+            case 'diarionota':
+                return <DiarioNota
+                    setCurrentComponent={setCurrentComponent}
+                    practicaId={selectedPracticaId} />;
             default:
                 return (
                     <motion.div

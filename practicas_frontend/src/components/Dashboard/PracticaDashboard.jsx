@@ -15,6 +15,7 @@ import CrearDocenteJurado from '../jurados/CrearDocenteJurado';
 import JuradoManagement from '../jurados/JuradoManagement';
 import AsignarDocente from '../Modulos/AsignarDocente';
 import PracticaManagement from '../Practicas/PracticaManagement';
+import EvaluacionForm from '../Evaluaciones/EvaluacionForm';
 
 
 const DashboardContainer = styled(Container)`
@@ -191,14 +192,18 @@ const PracticaDashboard = () => {
         },
         {
             icon: <FaGavel />,
-            text: "ASIGNAR JURADO",
+            text: "JURADO MANAGEMENT",
             component: 'assignJury'
         },
-
         {
             icon: <FaPlus />,
             text: "PRACTICA MANAGEMENT",
             component: 'createPracticas'
+        },
+        {
+            icon: <FaPlus />,
+            text: "EVALUACION",
+            component: 'evaluacionInforme'
         }
     ];
 
@@ -210,6 +215,8 @@ const PracticaDashboard = () => {
                 return <CrearDocenteJurado />;
             case 'usersList':
                 return <DocenteJuradoList />;
+            case 'evaluacionInforme':
+                return <EvaluacionForm />;
             case 'assignTeacher':
                 return <AsignarDocente />;
             case 'createPracticas':

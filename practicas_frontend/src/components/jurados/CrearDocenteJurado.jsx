@@ -17,7 +17,7 @@ const CrearDocenteJurado = () => {
 
     const roles = [
 
-        'DOCENTE', 'JURADO'
+        'DOCENTE', 'JURADO', 'ESTUDIANTE'
     ];
 
     const handleSubmit = async (e) => {

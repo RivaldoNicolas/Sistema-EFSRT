@@ -31,6 +31,8 @@ class EsDocente(permissions.BasePermission):
 
 class EsEstudiante(permissions.BasePermission):
     def has_permission(self, request, view):
+        print(f"Checking student permission for user: {request.user}")
+        print(f"User role is: {request.user.rol}")
         return request.user.rol == 'ESTUDIANTE'
 
     def has_object_permission(self, request, view, obj):
@@ -57,6 +59,3 @@ class PermisosModuloPracticas(permissions.BasePermission):
             return True
         return request.user.rol in ['ADMIN', 'PRACTICAS']
 
-class EsEstudiante(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return hasattr(request.user, 'perfil_estudiante')

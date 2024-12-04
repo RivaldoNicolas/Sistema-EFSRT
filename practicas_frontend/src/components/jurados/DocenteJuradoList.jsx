@@ -17,7 +17,8 @@ const DocenteJuradoList = () => {
 
     const roles = [
         { value: 'JURADO', label: 'Jurado Evaluador' },
-        { value: 'DOCENTE', label: 'Docente' }
+        { value: 'DOCENTE', label: 'Docente' },
+        { value: 'ESTUDIANTE', label: 'Estudiante' }
     ];
 
     useEffect(() => {
@@ -60,7 +61,7 @@ const DocenteJuradoList = () => {
 
     return (
         <div className="bg-white p-4 rounded shadow">
-            <h3>Lista de Jurados y Docentes</h3>
+            <h3>Lista de Jurados, Docentes y Estudiantes</h3>
             <Form.Group controlId="roleSelect" className="mb-3">
                 <Form.Label>Filtrar por Rol</Form.Label>
                 <Form.Control as="select" value={selectedRole} onChange={handleRoleChange}>

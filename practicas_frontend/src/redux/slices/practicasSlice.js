@@ -29,9 +29,9 @@ export const createPractica = createAsyncThunk(
   async (practicaData, { rejectWithValue }) => {
     try {
       const formattedData = {
-        modulo: Number(practicaData.modulo),
-        estudiante: Number(practicaData.estudiante),
-        supervisor: Number(practicaData.supervisor),
+        estudiante_id: Number(practicaData.estudiante),
+        modulo_id: Number(practicaData.modulo),
+        supervisor_id: Number(practicaData.supervisor),
         fecha_inicio: practicaData.fecha_inicio,
         fecha_fin: new Date(
           new Date(practicaData.fecha_inicio).getTime() +
