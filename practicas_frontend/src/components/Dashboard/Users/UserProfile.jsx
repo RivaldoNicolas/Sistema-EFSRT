@@ -3,29 +3,44 @@ import { Card, Row, Col, Table, Button } from 'react-bootstrap';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { FaUser, FaEnvelope, FaIdCard, FaUserTag, FaPhone, FaMapMarkerAlt, FaBirthdayCake } from 'react-icons/fa';
+import {
+    FaUser,
+    FaEnvelope,
+    FaIdCard,
+    FaUserTag,
+    FaPhone,
+    FaMapMarkerAlt,
+    FaBirthdayCake,
+    FaGraduationCap,
+    FaBookReader,
+    FaFileInvoice,
+    FaFile
+} from 'react-icons/fa';
+
 import EditProfile from './EditProfile';
+
 const ProfileCard = styled(Card)`
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: none;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 `;
 
 const DataRow = styled.tr`
-  &:hover {
-    background-color: #f8f9fa;
-  }
+    &:hover {
+        background-color: #f8f9fa;
+    }
 `;
 
 const DataLabel = styled.td`
-  font-weight: 600;
-  color: #4a5568;
+    font-weight: 600;
+    color: #4a5568;
 `;
+
 const EditButton = styled(Button)`
-  position: absolute;
-  top: 20px;
-  right: 20px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
 `;
 
 const roleLabels = {
@@ -39,7 +54,6 @@ const roleLabels = {
     'JURADO': 'Jurado Evaluador'
 };
 
-
 const UserProfile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const user = useSelector(state => state.auth.user);
@@ -47,6 +61,7 @@ const UserProfile = () => {
     if (isEditing) {
         return <EditProfile onCancel={() => setIsEditing(false)} />;
     }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -114,6 +129,36 @@ const UserProfile = () => {
                                                 <DataLabel><FaBirthdayCake className="me-2 text-primary" /> Edad:</DataLabel>
                                                 <td>{user?.edad || 'No especificada'}</td>
                                             </DataRow>
+
+                                            {user?.rol === 'ESTUDIANTE' && (
+                                                <>
+                                                    <DataRow>
+                                                        <DataLabel><FaGraduationCap className="me-2 text-primary" /> Carrera:</DataLabel>
+                                                        <td>{user?.estudiante_data?.carrera || 'No especificada'}</td>
+                                                    </DataRow>
+                                                    <DataRow>
+                                                        <DataLabel><FaBookReader className="me-2 text-primary" /> Ciclo:</DataLabel>
+                                                        <td>{user?.estudiante_data?.ciclo || 'No especificado'}</td>
+                                                    </DataRow>
+                                                    <DataRow>
+                                                        <DataLabel><FaFileInvoice className="me-2 text-primary" /> Boleta de Pago:</DataLabel>
+                                                        <td>{user?.estudiante_data?.boleta_pago ? (
+                                                            <a href={user.estudiante_data.boleta_pago} target="_blank" rel="noopener noreferrer">
+                                                                Ver Boleta
+                                                            </a>
+                                                        ) : 'Pendiente'}</td>
+                                                    </DataRow>
+                                                    <DataRow>
+                                                        <DataLabel><FaFile className="me-2 text-primary" /> FUT:</DataLabel>
+                                                        <td>{user?.estudiante_data?.fut ? (
+                                                            <a href={user.estudiante_data.fut} target="_blank" rel="noopener noreferrer">
+                                                                Ver FUT
+                                                            </a>
+                                                        ) : 'Pendiente'}</td>
+                                                    </DataRow>
+                                                </>
+                                            )}
+
                                             <DataRow>
                                                 <DataLabel>Estado de Autenticación:</DataLabel>
                                                 <td>{user?.isAuthenticated ? 'Autenticado' : 'No Autenticado'}</td>

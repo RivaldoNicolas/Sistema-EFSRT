@@ -5,31 +5,44 @@ from decimal import Decimal
 
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
+    estudiante_data = serializers.SerializerMethodField(read_only=True)
+    carrera = serializers.CharField(write_only=True, required=False)
+    ciclo = serializers.IntegerField(write_only=True, required=False)
+    boleta_pago = serializers.FileField(write_only=True, required=False)
+    fut = serializers.FileField(write_only=True, required=False)
 
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'email', 'password', 'rol', 'first_name', 'last_name', 'telefono', 'direccion', 'edad']
+        fields = ['id', 'username', 'email', 'password', 'rol', 'first_name', 'last_name',
+                 'telefono', 'direccion', 'edad', 'estudiante_data', 'carrera', 'ciclo',
+                 'boleta_pago', 'fut']
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True},
             'rol': {'required': True}
         }
-    def validate_edad(self, value):
-        if value < 15:
-            raise serializers.ValidationError("La edad mínima es 15 años")
-        return value
-    def validate_email(self, value):
-        if Usuario.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Este email ya está registrado")
-        return value
 
-    def validate_telefono(self, value):
-        if value and not value.isdigit():
-            raise serializers.ValidationError("El teléfono debe contener solo números")
-        return value
+    def get_estudiante_data(self, obj):
+        try:
+            estudiante = Estudiante.objects.get(usuario=obj)
+            return {
+                'carrera': estudiante.carrera,
+                'ciclo': estudiante.ciclo,
+                'boleta_pago': estudiante.boleta_pago.url if estudiante.boleta_pago else None,
+                'fut': estudiante.fut.url if estudiante.fut else None
+            }
+        except Estudiante.DoesNotExist:
+            return None
 
     def create(self, validated_data):
-        user = Usuario(
+        # Extraer datos de estudiante
+        carrera = validated_data.pop('carrera', None)
+        ciclo = validated_data.pop('ciclo', None)
+        boleta_pago = validated_data.pop('boleta_pago', None)
+        fut = validated_data.pop('fut', None)
+
+        # Crear usuario
+        user = Usuario.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             rol=validated_data['rol'],
@@ -40,7 +53,19 @@ class UsuarioSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+
+        # Si es estudiante, crear perfil estudiante
+        if user.rol == 'ESTUDIANTE' and carrera and ciclo:
+            Estudiante.objects.create(
+                usuario=user,
+                carrera=carrera,
+                ciclo=ciclo,
+                boleta_pago=boleta_pago,
+                fut=fut
+            )
+
         return user
+
 
     def update(self, instance, validated_data):
         # Solo actualiza el password si viene en los datos
@@ -158,7 +183,6 @@ class AsistenciaSerializer(serializers.ModelSerializer):
         return instance
 
 
-
 class InformeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Informe
@@ -191,7 +215,7 @@ class AsignacionJuradoSerializer(serializers.ModelSerializer):
 class EstudianteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Estudiante
-        fields = ['id', 'usuario', 'carrera', 'ciclo', 'codigo_estudiante']
+        fields = ['id', 'usuario', 'carrera', 'ciclo', 'boleta_pago', 'fut']
     def validate_ciclo(self, value):
         if not 1 <= value <= 6:
             raise serializers.ValidationError("El ciclo debe estar entre 1 y 6")

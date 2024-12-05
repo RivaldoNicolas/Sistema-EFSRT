@@ -35,7 +35,19 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
             user = serializer.save()
+            
+            # Si es estudiante, crear el perfil adicional
+            if user.rol == 'ESTUDIANTE':
+                estudiante_data = {
+                    'usuario': user,
+                    'carrera': request.data.get('carrera'),
+                    'ciclo': request.data.get('ciclo'),
+                    'codigo_estudiante': request.data.get('codigo_estudiante')
+                }
+                Estudiante.objects.create(**estudiante_data)
+            
             refresh = RefreshToken.for_user(user)
             return Response({
                 'user': serializer.data,
@@ -46,6 +58,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
     @action(detail=False, methods=['post'])
     def change_password(self, request):
@@ -100,11 +113,35 @@ class EstudianteViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            serializer = self.get_serializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            estudiante = serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # Create user first
+            user_data = {
+                'username': request.data.get('username'),
+                'password': request.data.get('password'),
+                'email': request.data.get('email'),
+                'first_name': request.data.get('first_name'),
+                'last_name': request.data.get('last_name'),
+                'rol': 'ESTUDIANTE'
+            }
+            
+            user = Usuario.objects.create_user(**user_data)
+            
+            # Create student profile
+            estudiante_data = {
+                'usuario': user,
+                'carrera': request.data.get('carrera'),
+                'ciclo': request.data.get('ciclo'),
+                'codigo_estudiante': request.data.get('codigo_estudiante'),
+                'semestre': request.data.get('semestre'),
+                'grupo': request.data.get('grupo')
+            }
+            
+            estudiante = Estudiante.objects.create(**estudiante_data)
+            
+            return Response({
+                'message': 'Estudiante creado exitosamente',
+                'data': self.get_serializer(estudiante).data
+            }, status=status.HTTP_201_CREATED)
+            
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -289,7 +326,7 @@ class PracticaViewSet(viewsets.ModelViewSet):
 class AsistenciaViewSet(viewsets.ModelViewSet):
     queryset = Asistencia.objects.all()
     serializer_class = AsistenciaSerializer
-    permission_classes = [IsAuthenticated, EsDocente]
+    permission_classes = [IsAuthenticated, EsDocente |EsEstudiante]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = {
         'practica': ['exact'],
@@ -298,6 +335,13 @@ class AsistenciaViewSet(viewsets.ModelViewSet):
         'puntualidad': ['exact']
     }
     search_fields = ['practica__estudiante__username']
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'ESTUDIANTE':
+            return Asistencia.objects.filter(practica__estudiante=user)
+        elif user.rol == 'DOCENTE':
+            return Asistencia.objects.filter(practica__supervisor=user)
+        return Asistencia.objects.none()
 
     def perform_create(self, serializer):
         asistencia = serializer.save()

@@ -30,9 +30,12 @@ class Estudiante(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='perfil_estudiante')
     carrera = models.CharField(max_length=100)
     ciclo = models.IntegerField()
-    codigo_estudiante = models.CharField(max_length=20, unique=True)
+    boleta_pago = models.FileField(upload_to='boletas_pago/', null=True, blank=True)
+    fut = models.FileField(upload_to='futs/', null=True, blank=True)
+
     def __str__(self):
         return f"{self.usuario.username} - {self.carrera}"
+
 
     def save(self, *args, **kwargs):
         self.usuario.rol = 'ESTUDIANTE'

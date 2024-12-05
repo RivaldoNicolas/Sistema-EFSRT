@@ -5,10 +5,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaUser } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
-import TeachersList from './Users/TeachersList';
-import NotaList from './Users/NotaList.jsx';
+import ChangePassword from './Users/ChangePassword';
+import UserProfile from './Users/UserProfile';
+import TeacherList from './Users/TeachersList';
+import NotaList from './Users/NotaList';
+
+
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -159,16 +163,20 @@ const FuaDashboard = () => {
   };
 
   const menuItems = [
-    { icon: <FaUsers />, text: "LISTA DE DOCENTES", component: 'teachersList' },
-    { icon: <FaCalendarCheck />, text: "LISTA DE ESTUDIANTES", component: 'notaList' },
+    { icon: <FaUsers />, text: "LISTA DE DOCENTE", component: 'TeacherList' },
+    { icon: <FaUsers />, text: "LISTA DE NOTAS", component: 'NotaList' },
   ];
 
   const renderComponent = () => {
     switch (currentComponent) {
-      case 'teachersList':
-        return <TeachersList />;
-      case 'notaList':
+      case 'TeacherList':
+        return <TeacherList />;
+      case 'NotaList':
         return <NotaList />;
+      case 'profile':
+        return <UserProfile />;
+      case 'changePassword':
+        return <ChangePassword />;
       default:
         return (
           <motion.div
@@ -176,7 +184,68 @@ const FuaDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white p-4 rounded-3 shadow-sm"
           >
-            <h2>Bienvenido al Sistema</h2>
+            <div className="text-center mb-4">
+              <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
+              <p className="text-muted"> {user?.username} | Rol: {user?.rol}</p>
+            </div>
+
+            <div className="row g-4 mt-2">
+              <div className="col-md-4">
+                <div className="card h-100 border-0 shadow-sm">
+                  <div className="card-body text-center">
+                    <FaUsers className="text-primary mb-3" size={40} />
+                    <h5 className="card-title">Gestión de Usuarios</h5>
+                    <p className="card-text">Administra los usuarios del sistema, crea nuevas cuentas y gestiona permisos.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-4">
+                <div className="card h-100 border-0 shadow-sm">
+                  <div className="card-body text-center">
+                    <FaCalendarCheck className="text-success mb-3" size={40} />
+                    <h5 className="card-title">Evaluaciones Diarias</h5>
+                    <p className="card-text">Realiza seguimiento y evaluación del desempeño diario de los estudiantes.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-4">
+                <div className="card h-100 border-0 shadow-sm">
+                  <div className="card-body text-center">
+                    <FaChalkboardTeacher className="text-info mb-3" size={40} />
+                    <h5 className="card-title">Evaluación de Exposiciones</h5>
+                    <p className="card-text">Gestiona y califica las presentaciones y exposiciones de los estudiantes.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-light rounded-3">
+              <h4 className="text-secondary mb-3">Accesos Rápidos</h4>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <button
+                    className="btn btn-outline-primary w-100"
+                    onClick={() => setCurrentComponent('createUser')}
+                  >
+                    <FaUserPlus className="me-2" /> Crear Nuevo Usuario
+                  </button>
+                </div>
+                <div className="col-md-6">
+                  <button
+                    className="btn btn-outline-success w-100"
+                    onClick={() => setCurrentComponent('usersList')}
+                  >
+                    <FaUsers className="me-2" /> Ver Lista de Usuarios
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 text-center text-muted">
+              <p>Para comenzar, selecciona una opción del menú lateral o usa los accesos rápidos.</p>
+            </div>
           </motion.div>
         );
     }
@@ -238,15 +307,18 @@ const FuaDashboard = () => {
               <UserMenu.Toggle as="div">
                 <UserInfo as={motion.div} whileHover={{ scale: 1.02 }}>
                   <div className="user-details">
-                    <span className="fw-bold">usuario: {user?.username}</span>
+                    <span className="fw-bold">{user?.username}</span>
                   </div>
                   <FaUserCircle size={35} />
                 </UserInfo>
               </UserMenu.Toggle>
 
               <UserMenu.Menu>
-                <UserMenu.Item>
+                <UserMenu.Item onClick={() => setCurrentComponent('profile')}>
                   <FaInfo className="me-2" /> Mi Perfil
+                </UserMenu.Item>
+                <UserMenu.Item onClick={() => setCurrentComponent('changePassword')}>
+                  <FaKey className="me-2" /> Cambiar Contraseña
                 </UserMenu.Item>
                 <UserMenu.Divider />
                 <UserMenu.Item className="text-danger" onClick={handleLogout}>

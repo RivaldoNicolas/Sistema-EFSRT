@@ -4,14 +4,26 @@ import { Form, Button, Card } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { showAlert } from '../../../redux/slices/alertSlice';
-import { updateUserProfile } from '../../../redux/slices/userSlice';
+import { updateUserProfile, fetchUserProfile } from '../../../redux/slices/userSlice';
+import { updateUserProfile as updateUserProfileAction } from '../../../redux/slices/authSlice';
 
 const StyledCard = styled(Card)`
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: none;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 `;
+
+const roleLabels = {
+    'ADMIN': 'Administrador General',
+    'FUA': 'Encargado FUA',
+    'PRACTICAS': 'Encargado EFSRT',
+    'COORDINADOR': 'Coordinador Academico',
+    'SECRETARIA': 'Secretaria',
+    'DOCENTE': 'Docente',
+    'ESTUDIANTE': 'Estudiante',
+    'JURADO': 'Jurado Evaluador'
+};
 
 const EditProfile = ({ onCancel }) => {
     const user = useSelector(state => state.auth.user);
@@ -26,13 +38,23 @@ const EditProfile = ({ onCancel }) => {
         telefono: user?.telefono || '',
         direccion: user?.direccion || '',
         edad: user?.edad || '',
-        rol: user?.rol || ''
+        rol: user?.rol || '',
+        carrera: user?.estudiante_data?.carrera || '',
+        ciclo: user?.estudiante_data?.ciclo || '',
+        boleta_pago: user?.estudiante_data?.boleta_pago || '',
+        fut: user?.estudiante_data?.fut || ''
     });
 
     const [errors, setErrors] = useState({});
 
     const validateForm = () => {
         const newErrors = {};
+
+        if (!formData.username) {
+            newErrors.username = 'El username es requerido';
+        } else if (formData.username.length < 3) {
+            newErrors.username = 'El username debe tener al menos 3 caracteres';
+        }
 
         if (!formData.first_name) newErrors.first_name = 'El nombre es requerido';
         if (!formData.last_name) newErrors.last_name = 'El apellido es requerido';
@@ -81,43 +103,45 @@ const EditProfile = ({ onCancel }) => {
             return;
         }
 
-        try {
-            const formattedData = {
-                ...formData,
-                id: user.id,
-                edad: parseInt(formData.edad) || null,
-                username: user.username,
-                rol: user.rol
-            };
+        const formattedData = {
+            id: user.id,
+            username: formData.username,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            email: formData.email,
+            telefono: formData.telefono || "",
+            direccion: formData.direccion || "",
+            edad: formData.edad ? parseInt(formData.edad) : null,
+            rol: user.rol,
+            dni: user.dni || "",
+            estudiante_data: user.estudiante_data
+        };
 
+        try {
             const resultAction = await dispatch(updateUserProfile(formattedData));
 
-            if (resultAction.meta.requestStatus === 'fulfilled') {
+            if (resultAction.payload) {
+                // Actualizar el estado global directamente
+                dispatch(updateUserProfileAction(resultAction.payload));
+
                 dispatch(showAlert({
                     type: 'success',
                     message: 'Perfil actualizado exitosamente'
                 }));
                 onCancel();
-            } else {
-                throw new Error(resultAction.error?.message || 'Error al actualizar el perfil');
+
+                // Forzar actualización del componente
+                window.dispatchEvent(new Event('storage'));
             }
         } catch (error) {
             dispatch(showAlert({
                 type: 'error',
-                message: error.message
+                message: error.message || 'Error al actualizar el perfil'
             }));
         }
     };
-    const roleLabels = {
-        'ADMIN': 'Administrador General',
-        'FUA': 'Encargado FUA',
-        'PRACTICAS': 'Encargado EFSRT',
-        'COORDINADOR': 'Coordinador Academico',
-        'SECRETARIA': 'Secretaria',
-        'DOCENTE': 'Docente',
-        'ESTUDIANTE': 'Estudiante',
-        'JURADO': 'Jurado Evaluador'
-    };
+
+
 
     return (
         <motion.div
@@ -131,6 +155,20 @@ const EditProfile = ({ onCancel }) => {
                 </Card.Header>
                 <Card.Body>
                     <Form onSubmit={handleSubmit}>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Username *</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleChange}
+                                isInvalid={!!errors.username}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.username}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
                         <Form.Group className="mb-3">
                             <Form.Label>Nombre *</Form.Label>
                             <Form.Control
@@ -216,16 +254,6 @@ const EditProfile = ({ onCancel }) => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Username</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name="username"
-                                value={formData.username}
-                                disabled
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
                             <Form.Label>Rol</Form.Label>
                             <Form.Control
                                 type="text"
@@ -234,6 +262,48 @@ const EditProfile = ({ onCancel }) => {
                                 disabled
                             />
                         </Form.Group>
+
+                        {formData.rol === 'ESTUDIANTE' && (
+                            <>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Carrera</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="carrera"
+                                        value={formData.carrera}
+                                        disabled
+                                    />
+                                </Form.Group>
+
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Ciclo</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        name="ciclo"
+                                        value={formData.ciclo}
+                                        disabled
+                                    />
+                                </Form.Group>
+
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Boleta de Pago</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={formData.boleta_pago ? 'Cargada' : 'Pendiente'}
+                                        disabled
+                                    />
+                                </Form.Group>
+
+                                <Form.Group className="mb-3">
+                                    <Form.Label>FUT</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={formData.fut ? 'Cargado' : 'Pendiente'}
+                                        disabled
+                                    />
+                                </Form.Group>
+                            </>
+                        )}
 
                         <div className="d-flex gap-2 justify-content-end">
                             <Button

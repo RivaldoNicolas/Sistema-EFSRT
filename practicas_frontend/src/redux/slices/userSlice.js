@@ -19,6 +19,14 @@ export const fetchUsersByRole = createAsyncThunk(
     return response.data;
   }
 );
+export const fetchUserProfile = createAsyncThunk(
+  "users/fetchProfile",
+  async (_, { getState }) => {
+    const userId = getState().auth.user.id;
+    const response = await api.get(`/usuarios/${userId}/`);
+    return response.data;
+  }
+);
 
 export const fetchUserDetails = createAsyncThunk(
   "users/fetchUserDetails",
@@ -38,26 +46,22 @@ export const deleteUser = createAsyncThunk(
 
 export const updateUserProfile = createAsyncThunk(
   "users/updateProfile",
-  async (userData, { rejectWithValue }) => {
-    try {
-      const dataToSend = {
-        username: userData.username,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        email: userData.email,
-        telefono: userData.telefono || "",
-        direccion: userData.direccion || "",
-        edad: userData.edad ? parseInt(userData.edad) : null,
-        rol: userData.rol,
-        dni: userData.dni || "",
-      };
-      const response = await api.put(`/usuarios/${userData.id}/`, dataToSend);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Error en la actualización"
-      );
-    }
+  async (userData, { dispatch }) => {
+    const dataToSend = {
+      username: userData.username,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      email: userData.email,
+      telefono: userData.telefono || "",
+      direccion: userData.direccion || "",
+      edad: userData.edad ? parseInt(userData.edad) : null,
+      rol: userData.rol,
+      dni: userData.dni || "",
+    };
+
+    const response = await api.put(`/usuarios/${userData.id}/`, dataToSend);
+    dispatch(updateUserProfile(response.data));
+    return response.data;
   }
 );
 
@@ -169,6 +173,24 @@ const userSlice = createSlice({
         state.selectedUser = action.payload;
       })
       .addCase(fetchUserDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update both the users array and auth user
+        const index = state.users.findIndex(
+          (user) => user.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.users[index] = action.payload;
+        }
+      })
+      .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       });

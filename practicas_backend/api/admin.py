@@ -9,8 +9,9 @@ class UsuarioAdmin(admin.ModelAdmin):
 
 @admin.register(Estudiante)
 class EstudianteAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'carrera', 'ciclo', 'codigo_estudiante')
-    search_fields = ('codigo_estudiante', 'usuario__username')
+    list_display = ['usuario', 'carrera', 'ciclo']  # Removemos 'codigo_estudiante'
+    search_fields = ['usuario__username', 'carrera']
+    list_filter = ['carrera', 'ciclo']
 
 admin.site.register(ModuloPracticas)
 admin.site.register(Practica)

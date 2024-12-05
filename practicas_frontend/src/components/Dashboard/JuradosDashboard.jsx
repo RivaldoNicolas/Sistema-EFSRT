@@ -11,10 +11,10 @@ import {
 } from 'react-icons/fa';
 
 import ChangePassword from './Users/ChangePassword';
-import ListaEstudiante from './Estudiante/ListaEstudiante';
 import UserProfile from './Users/UserProfile';
 import EvaluacionForm from '../Evaluaciones/EvaluacionForm';
 import EvaluacionList from '../Evaluaciones/EvaluacionList';
+import ListaPracticaJurados from '../jurados/ListaPracticasJurados';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -165,15 +165,15 @@ const JuradosDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaUserPlus />, text: "LISTA ESTUDIANTE", component: 'ListaEstudiante' },
+        { icon: <FaUserPlus />, text: "LISTA ESTUDIANTES", component: 'ListaEstudiantes' },
         { icon: <FaAsterisk />, text: "EVALUACION DE ESTUDIANTE", component: 'EvaluacionForm' },
         { icon: <FaAsterisk />, text: "LISTA DE EVALUACION", component: 'EvaluacionList' },
     ];
 
     const renderComponent = () => {
         switch (currentComponent) {
-            case 'ListaEstudiante':
-                return <ListaEstudiante />;
+            case 'ListaEstudiantes':
+                return <ListaPracticaJurados />;
             case 'EvaluacionForm':
                 return <EvaluacionForm />;
             case 'EvaluacionList':

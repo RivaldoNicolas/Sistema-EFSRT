@@ -1,43 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUsersByRole } from '../../../redux/slices/userSlice';
-import { Table, Form, Spinner } from 'react-bootstrap';
+import { Table, Spinner, Badge } from 'react-bootstrap';
+import { fetchAsistenciasPractica } from '../../../redux/slices/docenteSlice';
 
-const Asistencia = () => {
+const Asistencia = ({ practiceId }) => { // Assume practiceId is passed as a prop
     const dispatch = useDispatch();
-    const { users, loading } = useSelector(state => state.users);
-    const [attendanceData, setAttendanceData] = useState([]);
+    const { asistencias, loading } = useSelector(state => state.docente);
 
     useEffect(() => {
-        dispatch(fetchUsersByRole());
-    }, [dispatch]);
-
-    // Manejo de cambios en las casillas
-    const handleInputChange = (userId, field, value) => {
-        setAttendanceData((prevData) =>
-            prevData.map((entry) =>
-                entry.id === userId ? { ...entry, [field]: value } : entry
-            )
-        );
-    };
-
-    useEffect(() => {
-        // Inicializar los datos de asistencia con los usuarios
-        if (users.length) {
-            const initialData = users.map(user => ({
-                id: user.id,
-                fecha: new Date().toLocaleDateString(),
-                asistio: 0, // Valor por defecto
-                puntualidad: 0 // Valor por defecto
-            }));
-            setAttendanceData(initialData);
+        if (practiceId) {
+            dispatch(fetchAsistenciasPractica(practiceId)); // Use practiceId instead of currentUser.id
         }
-    }, [users]);
+    }, [dispatch, practiceId]);
+    console.log("Asistencias:", asistencias);
+
+    const getBadgeColor = (status) => {
+        switch (status) {
+            case 'PRESENTE':
+                return 'success';
+            case 'FALTA':
+                return 'danger';
+            case 'TARDANZA':
+                return 'warning';
+            default:
+                return 'secondary';
+        }
+    };
 
     return (
         <div className="bg-white p-4 rounded shadow">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h3>Asistencia</h3>
+                <h3>Registro de Asistencias</h3>
+                <div className="text-muted">
+                    Total de registros: {asistencias.length}
+                </div>
             </div>
 
             {loading ? (
@@ -49,40 +45,43 @@ const Asistencia = () => {
                     <thead>
                         <tr>
                             <th>Fecha</th>
-                            <th>Asistió</th>
-                            <th>P-T</th>
+                            <th>Asistencia</th>
+                            <th>Puntualidad</th>
+                            <th>Criterios de Evaluación</th>
+                            <th>Puntaje Diario</th>
+                            <th>Puntaje General</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {attendanceData.map((entry) => (
-                            <tr key={entry.id}>
-                                <td>{entry.fecha}</td>
+                        {asistencias.map((asistencia) => (
+                            <tr key={asistencia.id}>
+                                <td>{new Date(asistencia.fecha).toLocaleDateString()}</td>
                                 <td>
-                                    <Form.Control
-                                        as="select"
-                                        value={entry.asistio}
-                                        onChange={(e) =>
-                                            handleInputChange(entry.id, 'asistio', parseInt(e.target.value))
-                                        }
-                                    >
-                                        <option value={0}>0</option>
-                                        <option value={1}>1</option>
-                                    </Form.Control>
+                                    <Badge bg={getBadgeColor(asistencia.asistio)}>
+                                        {asistencia.asistio}
+                                    </Badge>
                                 </td>
                                 <td>
-                                    <Form.Control
-                                        as="select"
-                                        value={entry.puntualidad}
-                                        onChange={(e) =>
-                                            handleInputChange(entry.id, 'puntualidad', parseInt(e.target.value))
-                                        }
-                                    >
-                                        <option value={0}>0</option>
-                                        <option value={1}>1</option>
-                                    </Form.Control>
+                                    <Badge bg={getBadgeColor(asistencia.puntualidad)}>
+                                        {asistencia.puntualidad}
+                                    </Badge>
                                 </td>
+                                <td>
+                                    <div>Conceptual: {asistencia.criterios_asistencia.CONCEPTUAL}</div>
+                                    <div>Procedimental: {asistencia.criterios_asistencia.PROCEDIMENTAL}</div>
+                                    <div>Actitudinal: {asistencia.criterios_asistencia.ACTITUDINAL}</div>
+                                </td>
+                                <td>{asistencia.puntaje_diario}</td>
+                                <td>{asistencia.puntaje_general}</td>
                             </tr>
                         ))}
+                        {asistencias.length === 0 && (
+                            <tr>
+                                <td colSpan="6" className="text-center">
+                                    No hay registros de asistencia disponibles
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </Table>
             )}

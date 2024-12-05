@@ -5,8 +5,10 @@ import api from "../../services/api";
 export const fetchPracticasDocente = createAsyncThunk(
   "docente/fetchPracticas",
   async (_, { getState }) => {
-    const { user } = getState().auth; // Get current user/docente ID
+    const { user } = getState().auth;
+    console.log("Usuario actual:", user);
     const response = await api.get(`/practicas/?supervisor=${user.id}`);
+    console.log("Respuesta API:", response.data);
     return response.data;
   }
 );
@@ -21,10 +23,11 @@ export const registrarAsistencia = createAsyncThunk(
 );
 
 // Obtener asistencias de una práctica
+// Example of how the thunk might be set up
 export const fetchAsistenciasPractica = createAsyncThunk(
-  "docente/fetchAsistencias",
-  async (practicaId) => {
-    const response = await api.get(`/asistencias/?practica=${practicaId}`);
+  "docente/fetchAsistenciasPractica",
+  async (practiceId) => {
+    const response = await api.get(`/asistencias/?practica=${practiceId}`);
     return response.data;
   }
 );

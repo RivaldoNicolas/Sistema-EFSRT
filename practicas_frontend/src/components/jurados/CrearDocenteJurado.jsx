@@ -12,29 +12,67 @@ const CrearDocenteJurado = () => {
         password: '',
         rol: '',
         first_name: '',
-        last_name: ''
+        last_name: '',
+        carrera: '',
+        ciclo: '',
+        boleta_pago: null,
+        fut: null
     });
 
-    const roles = [
-
-        'DOCENTE', 'JURADO', 'ESTUDIANTE'
-    ];
+    const roles = ['DOCENTE', 'JURADO', 'ESTUDIANTE'];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await api.post('/usuarios/', userData);
+            let data;
+
+            if (userData.rol === 'ESTUDIANTE') {
+                const formData = new FormData();
+                Object.keys(userData).forEach(key => {
+                    if (key === 'boleta_pago' || key === 'fut') {
+                        if (userData[key]) {
+                            formData.append(key, userData[key]);
+                        }
+                    } else {
+                        formData.append(key, userData[key]);
+                    }
+                });
+                data = formData;
+            } else {
+                // Para DOCENTE y JURADO usar JSON normal
+                data = {
+                    username: userData.username,
+                    email: userData.email,
+                    password: userData.password,
+                    rol: userData.rol,
+                    first_name: userData.first_name,
+                    last_name: userData.last_name
+                };
+            }
+
+            const config = userData.rol === 'ESTUDIANTE'
+                ? { headers: { 'Content-Type': 'multipart/form-data' } }
+                : { headers: { 'Content-Type': 'application/json' } };
+
+            const response = await api.post('/usuarios/', data, config);
+
             dispatch(showAlert({
                 type: 'success',
                 message: 'Usuario creado exitosamente'
             }));
+
+            // Resetear formulario
             setUserData({
                 username: '',
                 email: '',
                 password: '',
                 rol: '',
                 first_name: '',
-                last_name: ''
+                last_name: '',
+                carrera: '',
+                ciclo: '',
+                boleta_pago: null,
+                fut: null
             });
         } catch (error) {
             dispatch(showAlert({
@@ -112,6 +150,47 @@ const CrearDocenteJurado = () => {
                             required
                         />
                     </Form.Group>
+
+                    {userData.rol === 'ESTUDIANTE' && (
+                        <>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Carrera</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={userData.carrera}
+                                    onChange={(e) => setUserData({ ...userData, carrera: e.target.value })}
+                                    required
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Ciclo</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    value={userData.ciclo}
+                                    onChange={(e) => setUserData({ ...userData, ciclo: e.target.value })}
+                                    required
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Boleta de Pago</Form.Label>
+                                <Form.Control
+                                    type="file"
+                                    onChange={(e) => setUserData({ ...userData, boleta_pago: e.target.files[0] })}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>FUT</Form.Label>
+                                <Form.Control
+                                    type="file"
+                                    onChange={(e) => setUserData({ ...userData, fut: e.target.files[0] })}
+                                />
+                            </Form.Group>
+                        </>
+                    )}
 
                     <Button type="submit" variant="primary" className="w-100">
                         Crear Usuario

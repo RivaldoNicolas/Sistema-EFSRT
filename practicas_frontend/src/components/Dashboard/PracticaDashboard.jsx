@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaUserPlus, FaBars, FaKey, FaBookReader, FaGavel, FaLayerGroup, FaPlus } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaUserPlus, FaUserGraduate, FaBars, FaKey, FaBookReader, FaGavel, FaLayerGroup, FaPlus } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
 import DocenteJuradoList from '../jurados/DocenteJuradoList';

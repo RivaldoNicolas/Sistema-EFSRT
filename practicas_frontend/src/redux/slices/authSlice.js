@@ -35,14 +35,21 @@ const authSlice = createSlice({
       localStorage.removeItem("refresh_token");
     },
 
-    updateUser: (state, action) => {
-      state.user = { ...state.user, ...action.payload };
-      localStorage.setItem("user", JSON.stringify(state.user));
+    updateUserProfile: (state, action) => {
+      const updatedUser = {
+        ...state.user,
+        ...action.payload,
+        estudiante_data: {
+          ...state.user?.estudiante_data,
+          ...action.payload?.estudiante_data,
+        },
+      };
+      state.user = updatedUser;
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     },
   },
 });
 
-export const { loginSuccess, refreshTokenSuccess, logout, updateUser } =
+export const { loginSuccess, refreshTokenSuccess, logout, updateUserProfile } =
   authSlice.actions;
-
 export default authSlice.reducer;

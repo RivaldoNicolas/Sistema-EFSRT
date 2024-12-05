@@ -195,7 +195,7 @@ const DocenteDashboard = () => {
                     >
                         <div className="text-center mb-4">
                             <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
-                            <p className="text-muted">Usuario: {user?.username} | Rol: {user?.rol}</p>
+                            <p className="text-muted">{user?.username} |{user?.rol}</p>
                         </div>
 
                         <div className="row g-4 mt-2">
