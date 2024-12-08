@@ -160,9 +160,12 @@ class Evaluacion(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
     jurado = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'rol': 'JURADO'})
     fecha_evaluacion = models.DateTimeField(default=timezone.now)
-    calificacion = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    calificacion = models.DecimalField(max_digits=4, decimal_places=2)
     observaciones = models.TextField(blank=True)
-    criterios_evaluados = models.JSONField(default=dict, blank=True)
+    criterios_evaluados = models.JSONField(default=dict)
+    class Meta:
+        # Asegura que un jurado solo pueda evaluar una vez la misma práctica
+        unique_together = ['practica', 'jurado']
 
 class AsignacionDocente(models.Model):
     docente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='asignaciones')

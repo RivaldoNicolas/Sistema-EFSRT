@@ -334,14 +334,19 @@ class AsistenciaViewSet(viewsets.ModelViewSet):
         'asistio': ['exact'],
         'puntualidad': ['exact']
     }
-    search_fields = ['practica__estudiante__username']
+    search_fields = ['practica_estudiante_username']
     def get_queryset(self):
         user = self.request.user
         if user.rol == 'ESTUDIANTE':
             return Asistencia.objects.filter(practica__estudiante=user)
-        elif user.rol == 'DOCENTE':
-            return Asistencia.objects.filter(practica__supervisor=user)
         return Asistencia.objects.none()
+    @action(detail=False, methods=['get'], url_path='estudiante/(?P<user_id>[^/.]+)')
+    def asistencias_estudiante(self, request, user_id=None):
+        asistencias = Asistencia.objects.filter(
+            practica__estudiante_id=user_id
+        ).order_by('-fecha')
+        serializer = self.get_serializer(asistencias, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         asistencia = serializer.save()
@@ -352,6 +357,7 @@ class AsistenciaViewSet(viewsets.ModelViewSet):
         asistencia = serializer.save()
         asistencia.calcular_puntaje_diario()
         asistencia.calcular_puntaje_general()
+
 
 class InformeViewSet(viewsets.ModelViewSet):
     queryset = Informe.objects.all()
@@ -427,24 +433,68 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     queryset = Evaluacion.objects.all()
     serializer_class = EvaluacionSerializer
     permission_classes = [IsAuthenticated, EsJurado]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['practica', 'jurado']
-    search_fields = ['practica__estudiante__username']
 
     @action(detail=False, methods=['post'])
-    def evaluar_modulo(self, request):
-        practica_id = request.data.get('practica_id')
-        calificacion = request.data.get('calificacion')
-        observaciones = request.data.get('observaciones')
+    def evaluar_practica(self, request):
+        try:
+            # 1. Get practica_id and validate practice exists
+            practica_id = request.data.get('practica_id')
+            practica = Practica.objects.get(id=practica_id)
+            if not practica_id:
+                return Response({"error": "practica_id es requerido"}, status=400)
+            
+            practica = Practica.objects.get(id=practica_id)
+            # Verificar si el jurado ya evaluó esta práctica
+            evaluacion_existente = Evaluacion.objects.filter(
+                practica_id=practica_id, 
+                jurado=request.user
+            ).exists()
+            
+            if evaluacion_existente:
+                return Response({
+                    "error": "Ya has evaluado esta práctica anteriormente"
+                }, status=400)
 
-        evaluacion = Evaluacion.objects.create(
-            practica_id=practica_id,
-            jurado=request.user,
-            calificacion=calificacion,
-            observaciones=observaciones
-        )
-        
-        return Response(self.get_serializer(evaluacion).data)
+            # 2. Check if jurado already evaluated
+            if Evaluacion.objects.filter(practica=practica, jurado=request.user).exists():
+                return Response(
+                    {"error": "Ya has evaluado esta práctica"}, 
+                    status=400
+                )
+
+            # 3. Check number of evaluations
+            evaluaciones_count = Evaluacion.objects.filter(practica=practica).count()
+            if evaluaciones_count >= 3:
+                return Response(
+                    {"error": "Esta práctica ya tiene 3 evaluaciones"},
+                    status=400
+                )
+
+            # 4. Create evaluation
+            evaluacion = Evaluacion.objects.create(
+                practica=practica,
+                jurado=request.user,
+                calificacion=request.data.get('calificacion'),
+                observaciones=request.data.get('observaciones', ''),
+                criterios_evaluados=request.data.get('criterios_evaluados', {})
+            )
+
+            # 5. Calculate final grade if third evaluation
+            if evaluaciones_count == 2:
+                evaluaciones = Evaluacion.objects.filter(practica=practica)
+                promedio = sum(e.calificacion for e in evaluaciones) / 3
+                practica.nota_final = promedio
+                practica.estado = 'EVALUADO'
+                practica.save()
+
+            return Response(self.get_serializer(evaluacion).data, status=201)
+
+        except Practica.DoesNotExist:
+            return Response({"error": "Práctica no encontrada"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+
 
 class GestionarEstudiantesViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.filter(rol='ESTUDIANTE')

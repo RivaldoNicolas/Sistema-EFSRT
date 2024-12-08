@@ -260,7 +260,7 @@ const AdminDashboard = () => {
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtjWt8u8zfB-EVkIItTLQj4sAPiLsg3vmADg&s"
                 alt="Logo"
                 className="img-fluid rounded-circle"
-                style={{ width: '100px' }}
+                style={{ width: '120px' }}
               />
             </motion.div>
             <button

@@ -26,8 +26,8 @@ export const registrarAsistencia = createAsyncThunk(
 // Example of how the thunk might be set up
 export const fetchAsistenciasPractica = createAsyncThunk(
   "docente/fetchAsistenciasPractica",
-  async (practiceId) => {
-    const response = await api.get(`/asistencias/?practica=${practiceId}`);
+  async (userId) => {
+    const response = await api.get(`/asistencias/estudiante/${userId}/`);
     return response.data;
   }
 );

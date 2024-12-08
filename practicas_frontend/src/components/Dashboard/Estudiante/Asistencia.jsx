@@ -1,18 +1,27 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Table, Spinner, Badge } from 'react-bootstrap';
+import { Table, Spinner, Badge, Button } from 'react-bootstrap';
 import { fetchAsistenciasPractica } from '../../../redux/slices/docenteSlice';
 
 const Asistencia = ({ practiceId }) => { // Assume practiceId is passed as a prop
     const dispatch = useDispatch();
     const { asistencias, loading } = useSelector(state => state.docente);
+    const { user } = useSelector(state => state.auth); // Obtener usuario autenticado
 
     useEffect(() => {
-        if (practiceId) {
-            dispatch(fetchAsistenciasPractica(practiceId)); // Use practiceId instead of currentUser.id
+        // Verificar autenticación y datos del usuario
+        if (user?.id) {
+            dispatch(fetchAsistenciasPractica(user.id));
         }
-    }, [dispatch, practiceId]);
-    console.log("Asistencias:", asistencias);
+    }, [dispatch, user]);
+
+    const handleReload = () => {
+        if (user?.practicas?.[0]?.id) {
+            dispatch(fetchAsistenciasPractica(user.practicas[0].id));
+        }
+    };
+
+
 
     const getBadgeColor = (status) => {
         switch (status) {
@@ -27,13 +36,15 @@ const Asistencia = ({ practiceId }) => { // Assume practiceId is passed as a pro
         }
     };
 
+
+
     return (
         <div className="bg-white p-4 rounded shadow">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3>Registro de Asistencias</h3>
-                <div className="text-muted">
-                    Total de registros: {asistencias.length}
-                </div>
+                <Button onClick={handleReload} variant="outline-primary">
+                    Recargar
+                </Button>
             </div>
 
             {loading ? (

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Usuario, Estudiante,ModuloPracticas, Practica, Asistencia, Informe, Evaluacion, AsignacionDocente, AsignacionJurado
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
+from django.utils import timezone
 
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
@@ -193,12 +194,52 @@ class EvaluacionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Evaluacion
-        fields = ['id', 'practica', 'jurado', 'calificacion', 
-                 'fecha_evaluacion','observaciones','criterios_evaluados']
-    def validate_calificacion(self, value):
-        if value and not 0 <= value <= 20:
-            raise serializers.ValidationError("La calificación debe estar entre 0 y 20")
-        return value
+        fields = [
+            'id', 
+            'practica', 
+            'jurado', 
+            'calificacion',
+            'fecha_evaluacion',
+            'observaciones',
+            'criterios_evaluados'
+        ]
+        read_only_fields = ['fecha_evaluacion', 'jurado']
+
+    def validate(self, data):
+        # Validate calificacion
+        if 'calificacion' in data and not 0 <= data['calificacion'] <= 20:
+            raise serializers.ValidationError({
+                "calificacion": "La calificación debe estar entre 0 y 20"
+            })
+            
+        # Validate criterios_evaluados structure
+        if 'criterios_evaluados' in data:
+            required_criterios = [
+                'presentacion',
+                'conocimiento_teorico', 
+                'habilidades_practicas',
+                'actitud_profesional'
+            ]
+            
+            for criterio in required_criterios:
+                if criterio not in data['criterios_evaluados']:
+                    raise serializers.ValidationError({
+                        "criterios_evaluados": f"Falta el criterio {criterio}"
+                    })
+                
+                valor = data['criterios_evaluados'][criterio]
+                if not 0 <= float(valor) <= 20:
+                    raise serializers.ValidationError({
+                        "criterios_evaluados": f"El valor de {criterio} debe estar entre 0 y 20"
+                    })
+        
+        return data
+
+    def create(self, validated_data):
+        # Set fecha_evaluacion automatically
+        validated_data['fecha_evaluacion'] = timezone.now()
+        return super().create(validated_data)
+
     
 class AsignacionDocenteSerializer(serializers.ModelSerializer):
     docente = UsuarioSerializer(read_only=True)

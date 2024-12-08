@@ -151,6 +151,7 @@ const roleLabels = {
 const JuradosDashboard = () => {
     const [currentComponent, setCurrentComponent] = useState('welcome');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [selectedPracticaId, setSelectedPracticaId] = useState(null);
     const user = useSelector(state => state.auth.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -173,9 +174,13 @@ const JuradosDashboard = () => {
     const renderComponent = () => {
         switch (currentComponent) {
             case 'ListaEstudiantes':
-                return <ListaPracticaJurados />;
+                return <ListaPracticaJurados
+                    setCurrentComponent={setCurrentComponent}
+                    setSelectedPracticaId={setSelectedPracticaId} />;
             case 'EvaluacionForm':
-                return <EvaluacionForm />;
+                return <EvaluacionForm
+                    setCurrentComponent={setCurrentComponent}
+                    practicaId={selectedPracticaId} />;
             case 'EvaluacionList':
                 return <EvaluacionList />;
             case 'profile':

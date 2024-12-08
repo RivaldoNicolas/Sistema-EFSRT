@@ -8,7 +8,6 @@ import {
     deleteUser,
 } from "../../../redux/slices/userSlice";
 
-
 const UserList = () => {
     const dispatch = useDispatch();
     const { users, loading } = useSelector(state => state.users);
@@ -18,7 +17,7 @@ const UserList = () => {
 
     const roles = [
         { value: 'ADMIN', label: 'Administrador General' },
-        { value: 'FUA', label: 'Encargado FUA' },
+        { value: 'FUA', label: 'Encargado JUA' },
         { value: 'PRACTICAS', label: 'Encargado EFSRT' },
         { value: 'COORDINADOR', label: 'Coordinador Academico' },
         { value: 'SECRETARIA', label: 'Secretaria' },

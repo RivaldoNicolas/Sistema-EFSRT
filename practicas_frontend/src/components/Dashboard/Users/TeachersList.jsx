@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUsersByRole } from '../../../redux/slices/userSlice';
-import { Table, Form, Spinner } from 'react-bootstrap';
+import { Table, Form, Spinner, Button, Modal } from 'react-bootstrap';
+import { fetchUsersByRole, fetchUserDetails } from '../../../redux/slices/userSlice';
 
 const TeachersList = () => {
     const dispatch = useDispatch();
-    const { users, loading } = useSelector(state => state.users);
-    const [selectedRole, setSelectedRole] = useState('PRACTICAS');
+    const { users, loading, selectedUser } = useSelector(state => state.users);
+    const [selectedRole, setSelectedRole] = useState('DOCENTE');
+    const [showModal, setShowModal] = useState(false);
 
     const roles = [
-        { value: 'ADMIN', label: 'Administrador General' },
-        { value: 'FUA', label: 'Encargado FUA' },
-        { value: 'PRACTICAS', label: 'Encargado EFSRT' },
-        { value: 'COORDINADOR', label: 'Coordinador Academico' },
-        { value: 'SECRETARIA', label: 'Secretaria' },
         { value: 'DOCENTE', label: 'Docente' },
-        { value: 'ESTUDIANTE', label: 'Estudiante' },
         { value: 'JURADO', label: 'Jurado Evaluador' }
     ];
+
+    const handleViewDetails = async (userId) => {
+        try {
+            await dispatch(fetchUserDetails(userId)).unwrap();
+            setShowModal(true);
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+        }
+    };
+
     useEffect(() => {
         dispatch(fetchUsersByRole(selectedRole));
     }, [dispatch, selectedRole]);
@@ -52,11 +57,53 @@ const TeachersList = () => {
                             <th>Email</th>
                             <th>Rol</th>
                             <th>N° Celular</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
-
+                    <tbody>
+                        {users && users.map(user => (
+                            <tr key={user.id}>
+                                <td>{user.first_name}</td>
+                                <td>{user.last_name}</td>
+                                <td>{user.email}</td>
+                                <td>{roles.find(role => role.value === user.rol)?.label}</td>
+                                <td>{user.telefono || 'No especificado'}</td>
+                                <td>
+                                    <Button
+                                        variant="info"
+                                        size="sm"
+                                        onClick={() => handleViewDetails(user.id)}
+                                    >
+                                        Ver Detalles
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
                 </Table>
             )}
+
+            <Modal show={showModal} onHide={() => setShowModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Detalles del Docente</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedUser && (
+                        <div>
+                            <p><strong>Nombres:</strong> {selectedUser.first_name}</p>
+                            <p><strong>Apellidos:</strong> {selectedUser.last_name}</p>
+                            <p><strong>Email:</strong> {selectedUser.email}</p>
+                            <p><strong>Teléfono:</strong> {selectedUser.telefono || 'No especificado'}</p>
+                            <p><strong>Dirección:</strong> {selectedUser.direccion || 'No especificada'}</p>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowModal(false)}>
+                        Cerrar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };

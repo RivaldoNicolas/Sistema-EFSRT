@@ -1,12 +1,23 @@
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useEffect, useState } from 'react';
-import { Table, Badge, Button, Form, InputGroup, Row, Col } from 'react-bootstrap';
-import { fetchPracticasDocente } from '../../redux/slices/docenteSlice';
+import {
+    Table,
+    Badge,
+    Button,
+    Form,
+    InputGroup,
+    Row,
+    Col,
+    Spinner,
+    Alert
+} from 'react-bootstrap';
+
+import { fetchPracticasJurados } from '../../redux/slices/juradosSlice';
 import { FaSearch } from 'react-icons/fa';
 
 const ListaPracticasJurados = ({ setCurrentComponent, setSelectedPracticaId }) => {
     const dispatch = useDispatch();
-    const { practicas, loading, error } = useSelector((state) => state.docente);
+    const { practicas, loading, error } = useSelector((state) => state.jurado);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedModule, setSelectedModule] = useState('');
 
@@ -15,30 +26,72 @@ const ListaPracticasJurados = ({ setCurrentComponent, setSelectedPracticaId }) =
 
     const handleAsistenciaClick = (practicaId) => {
         setSelectedPracticaId(practicaId);
-        setCurrentComponent('diarionota');
+        setCurrentComponent('EvaluacionForm');
     };
 
     const refreshList = () => {
-        dispatch(fetchPracticasDocente());
+        dispatch(fetchPracticasJurados());
     };
 
     useEffect(() => {
-        console.log('Dispatching fetchPracticasDocente');
+        console.log('Dispatching fetchPracticasJurados');
         refreshList();
         // Verificar el resultado
         console.log('Prácticas:', practicas);
     }, [dispatch]);
+    const getStatusBadge = (status) => {
+        const statusConfig = {
+            'EN_CURSO': { bg: 'primary', text: 'En Curso' },
+            'PENDIENTE': { bg: 'warning', text: 'Pendiente' },
+            'COMPLETADO': { bg: 'success', text: 'Completado' },
+            'EVALUADO': { bg: 'info', text: 'Evaluado' }
+        };
+
+        const config = statusConfig[status] || { bg: 'secondary', text: status };
+        return <Badge bg={config.bg}>{config.text}</Badge>;
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+
 
 
     const filteredPracticas = practicas.filter(practica => {
-        const fullName = `${practica.estudiante.first_name} ${practica.estudiante.last_name}`.toLowerCase();
-        const nameMatch = fullName.includes(searchTerm.toLowerCase());
+        const studentName = `${practica.estudiante.first_name} ${practica.estudiante.last_name}`.toLowerCase();
+        const searchTermLower = searchTerm.toLowerCase().trim();
         const moduleMatch = selectedModule ? practica.modulo.nombre === selectedModule : true;
-        return nameMatch && moduleMatch;
+
+        return (!searchTermLower || studentName.includes(searchTermLower)) && moduleMatch;
     });
 
-    if (loading) return <div>Cargando prácticas...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) {
+        return (
+            <div className="text-center p-5">
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                </Spinner>
+                <p className="mt-2">Cargando prácticas...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert variant="danger" className="m-3">
+                <Alert.Heading>Error al cargar las prácticas</Alert.Heading>
+                <p>{error}</p>
+                <Button onClick={refreshList} variant="outline-danger">
+                    Reintentar
+                </Button>
+            </Alert>
+        );
+    }
 
     return (
         <div>
@@ -97,26 +150,38 @@ const ListaPracticasJurados = ({ setCurrentComponent, setSelectedPracticaId }) =
                         <tr key={practica.id}>
                             <td>{`${practica.estudiante.first_name} ${practica.estudiante.last_name}`}</td>
                             <td>{practica.modulo.nombre}</td>
+                            <td>{getStatusBadge(practica.estado)}</td>
+                            <td>{formatDate(practica.fecha_inicio)}</td>
+                            <td>{formatDate(practica.fecha_fin)}</td>
                             <td>
-                                <Badge bg={practica.estado === 'EN_CURSO' ? 'primary' : 'success'}>
-                                    {practica.estado}
-                                </Badge>
+                                {practica.nota_final ?
+                                    <Badge bg="success">{practica.nota_final}</Badge> :
+                                    <Badge bg="warning">Pendiente</Badge>
+                                }
                             </td>
-                            <td>{practica.fecha_inicio}</td>
-                            <td>{practica.fecha_fin}</td>
-                            <td>{practica.nota_final || 'Pendiente'}</td>
                             <td>
                                 <Button
                                     variant="primary"
                                     size="sm"
                                     className="me-2"
                                     onClick={() => handleAsistenciaClick(practica.id)}
+                                    disabled={practica.estado === 'EVALUADO'}
                                 >
-                                    Asistencia
+                                    {practica.estado === 'EVALUADO' ? 'Evaluado' : 'Evaluar'}
                                 </Button>
                             </td>
                         </tr>
                     ))}
+                    {filteredPracticas.length === 0 && (
+                        <tr>
+                            <td colSpan="7" className="text-center p-4">
+                                <p className="text-muted mb-0">
+                                    No se encontraron prácticas que coincidan con los criterios de búsqueda
+                                </p>
+                            </td>
+                        </tr>
+                    )}
+
                 </tbody>
             </Table>
         </div>

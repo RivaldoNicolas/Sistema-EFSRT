@@ -5,13 +5,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaCalendarCheck, FaChalkboardTeacher, FaFileAlt, FaUserPlus, FaBars, FaKey } from 'react-icons/fa';
-import { showAlert } from '../../redux/slices/alertSlice';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUserPlus, FaCalendarCheck, FaBars, FaKey } from 'react-icons/fa';
+import { showAlert } from '../../redux/slices/alertSlice'
 import ChangePassword from './Users/ChangePassword';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
 import EvaluacionE from './Estudiante/EvaluacionE';
-import EvaluacionD from './Estudiante/EvaluacionD';
 import Asistencia from './Estudiante/Asistencia';
 
 const DashboardContainer = styled(Container)`
@@ -164,7 +163,6 @@ const EstudianteDashboard = () => {
 
     const menuItems = [
         { icon: <FaUserPlus />, text: "ASISTENCIA", component: 'asistencia' },
-        { icon: <FaUsers />, text: "EVALUACION DIARIA", component: 'evaluacionD' },
         { icon: <FaCalendarCheck />, text: "EVALUACIÓN INFORME", component: 'evaluacionE' },
     ];
 
@@ -172,8 +170,6 @@ const EstudianteDashboard = () => {
         switch (currentComponent) {
             case 'asistencia':
                 return <Asistencia />;
-            case 'evaluacionD':
-                return <EvaluacionD />;
             case 'evaluacionE':
                 return <EvaluacionE />;
             case 'usersList':
