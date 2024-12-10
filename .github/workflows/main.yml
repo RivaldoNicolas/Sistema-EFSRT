@@ -45,9 +45,9 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "DATABASE_NAME=testdb" >> $GITHUB_ENV
-          echo "DATABASE_USER=testuser" >> $GITHUB_ENV
-          echo "DATABASE_PASSWORD=testpassword" >> $GITHUB_ENV
+          echo "DATABASE_NAME=efsrt_db" >> $GITHUB_ENV
+          echo "DATABASE_USER=root" >> $GITHUB_ENV
+          echo "DATABASE_PASSWORD=" >> $GITHUB_ENV
           echo "DATABASE_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "DATABASE_PORT=3306" >> $GITHUB_ENV
 
