@@ -18,9 +18,16 @@ jobs:
         image: mysql:5.7
         env:
           MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpassword
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping --silent" --health-interval=5s --health-timeout=2s --health-retries=5
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -35,9 +42,21 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run Django migrations and tests
+      - name: Set environment variables
         run: |
+          echo "DATABASE_NAME=testdb" >> $GITHUB_ENV
+          echo "DATABASE_USER=testuser" >> $GITHUB_ENV
+          echo "DATABASE_PASSWORD=testpassword" >> $GITHUB_ENV
+          echo "DATABASE_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "DATABASE_PORT=3306" >> $GITHUB_ENV
+
+      - name: Django migrations
+        run: |
+          python manage.py makemigrations
           python manage.py migrate
+
+      - name: Run Django tests
+        run: |
           python manage.py test
 
   # Job para el frontend (React + Vite)
@@ -54,10 +73,16 @@ jobs:
           node-version: '16'
 
       - name: Install dependencies (frontend)
-        run: npm install
+        run: |
+          cd practicas_frontend
+          npm install
 
       - name: Build frontend
-        run: npm run build
+        run: |
+          cd practicas_frontend
+          npm run build
 
       - name: Run frontend tests
-        run: npm test
+        run: |
+          cd practicas_frontend
+          npm test
