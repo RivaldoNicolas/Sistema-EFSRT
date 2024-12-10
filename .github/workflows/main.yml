@@ -22,15 +22,15 @@ jobs:
           MYSQL_PASSWORD: ""
         ports:
           - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=5
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Debug current directory
-        run: |
-          echo "Directorio actual: $(pwd)"
-          ls -R
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -39,27 +39,27 @@ jobs:
 
       - name: Install dependencies (backend)
         run: |
-          cd Sistema-EFSRT/practicas_backend || exit 1
+          cd practicas_backend
           pip install -r requirements.txt
 
-      - name: Verify manage.py exists
+      - name: Debug current directory
         run: |
-          if [ ! -f "Sistema-EFSRT/practicas_backend/manage.py" ]; then
-            echo "Error: manage.py no encontrado en Sistema-EFSRT/practicas_backend"
-            exit 1
-          fi
+          pwd
+          ls -R
+          cd practicas_backend
+          pwd
+          ls -R
 
       - name: Django migrations
         run: |
-          cd Sistema-EFSRT/practicas_backend || exit 1
+          cd practicas_backend
           python manage.py makemigrations
           python manage.py migrate
 
       - name: Run Django tests
         run: |
-          cd Sistema-EFSRT/practicas_backend || exit 1
+          cd practicas_backend
           python manage.py test
-
 
   # Job para el frontend (React + Vite)
   frontend:
