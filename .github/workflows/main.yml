@@ -40,6 +40,7 @@ jobs:
 
       - name: Install dependencies (backend)
         run: |
+          cd practicas_frontend
           pip install -r requirements.txt
 
       - name: Set environment variables
