@@ -9,7 +9,6 @@ on:
       - main
 
 jobs:
-  # Job para el backend (Django REST Framework)
   backend:
     runs-on: ubuntu-latest
 
@@ -23,15 +22,15 @@ jobs:
           MYSQL_PASSWORD: ""
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=5s
-          --health-timeout=2s
-          --health-retries=5
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Debug current directory
+        run: |
+          echo "Directorio actual: $(pwd)"
+          ls -R
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -40,34 +39,27 @@ jobs:
 
       - name: Install dependencies (backend)
         run: |
-          cd practicas_backend || exit 1
+          cd Sistema-EFSRT/practicas_backend || exit 1
           pip install -r requirements.txt
 
-      - name: Set environment variables
+      - name: Verify manage.py exists
         run: |
-          echo "DATABASE_NAME=efsrt_db" >> $GITHUB_ENV
-          echo "DATABASE_USER=root" >> $GITHUB_ENV
-          echo "DATABASE_PASSWORD=" >> $GITHUB_ENV
-          echo "DATABASE_HOST=127.0.0.1" >> $GITHUB_ENV
-          echo "DATABASE_PORT=3306" >> $GITHUB_ENV
-
-      - name: Verify manage.py location
-        run: |
-          if [ ! -f "practicas_backend/manage.py" ]; then
-            echo "Error: manage.py no encontrado en practicas_backend"
+          if [ ! -f "Sistema-EFSRT/practicas_backend/manage.py" ]; then
+            echo "Error: manage.py no encontrado en Sistema-EFSRT/practicas_backend"
             exit 1
           fi
 
       - name: Django migrations
         run: |
-          cd practicas_backend || exit 1
+          cd Sistema-EFSRT/practicas_backend || exit 1
           python manage.py makemigrations
           python manage.py migrate
 
       - name: Run Django tests
         run: |
-          cd practicas_backend || exit 1
+          cd Sistema-EFSRT/practicas_backend || exit 1
           python manage.py test
+
 
   # Job para el frontend (React + Vite)
   frontend:
