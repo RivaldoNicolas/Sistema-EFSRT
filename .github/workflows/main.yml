@@ -17,10 +17,10 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: testdb
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpassword
+          MYSQL_ROOT_PASSWORD: ""
+          MYSQL_DATABASE: efsrt_db
+          MYSQL_USER: root
+          MYSQL_PASSWORD: ""
         ports:
           - 3306:3306
         options: >-
@@ -53,6 +53,7 @@ jobs:
 
       - name: Django migrations
         run: |
+          cd practicas_backend
           python manage.py makemigrations
           python manage.py migrate
 
