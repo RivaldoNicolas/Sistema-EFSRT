@@ -37,9 +37,16 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Create and activate virtual environment
+        run: |
+          cd practicas_backend
+          python -m venv venv
+          source venv/bin/activate
+
       - name: Install dependencies (backend)
         run: |
           cd practicas_backend
+          source venv/bin/activate
           pip install -r requirements.txt
 
       - name: Debug current directory
@@ -53,12 +60,14 @@ jobs:
       - name: Django migrations
         run: |
           cd practicas_backend
+          source venv/bin/activate
           python manage.py makemigrations
           python manage.py migrate
 
       - name: Run Django tests
         run: |
           cd practicas_backend
+          source venv/bin/activate
           python manage.py test
 
   # Job para el frontend (React + Vite)
