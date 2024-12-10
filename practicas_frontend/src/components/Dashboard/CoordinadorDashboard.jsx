@@ -10,7 +10,7 @@ import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
 import UserProfile from './Users/UserProfile';
 import TeachersList from './Users/TeachersList';
-import NotaList from './Users/NotaList';
+import NotasFinalesAlumnos from '../Practicas/NotasFinalesAlumnos';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -162,15 +162,15 @@ const CoordinadorDashboard = () => {
 
   const menuItems = [
     { icon: <FaUserPlus />, text: "LISTA DE DOCENTES", component: 'TeachersList' },
-    { icon: <FaUsers />, text: "LISTA DE ESTUDIANTES", component: 'NotaList' },
+    { icon: <FaUsers />, text: "LISTA DE ESTUDIANTES", component: 'NotasFinalesAlumnos' },
   ];
 
   const renderComponent = () => {
     switch (currentComponent) {
       case 'TeachersList':
         return <TeachersList />;
-      case 'NotaList':
-        return <NotaList />;
+      case 'NotasFinalesAlumnos':
+        return <NotasFinalesAlumnos />;
       case 'profile':
         return <UserProfile />;
       case 'changePassword':

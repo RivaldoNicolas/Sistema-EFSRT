@@ -23,7 +23,7 @@ router.register(r'practicas', PracticaViewSet, basename='practica')
 # Monitoring and evaluation routes
 router.register(r'estudiantes', EstudianteViewSet)
 router.register(r'asistencias', AsistenciaViewSet, basename='asistencia')
-router.register(r'informes', InformeViewSet)
+router.register(r'informes', InformeViewSet, basename='informe')
 router.register(r'evaluaciones', EvaluacionViewSet)
 
 urlpatterns = [

@@ -83,17 +83,28 @@ class Practica(models.Model):
         evaluaciones = Evaluacion.objects.filter(practica=self)
         informes = Informe.objects.filter(practica=self)
 
-        if asistencias.exists() and evaluaciones.exists() and informes.exists():
-            nota_asistencia = asistencias.aggregate(Avg('puntaje_general'))['puntaje_general__avg'] or 0
-            nota_evaluacion = evaluaciones.aggregate(Avg('calificacion'))['calificacion__avg'] or 0
-            nota_informe = Decimal('20') if informes.filter(aprobado=True).exists() else Decimal('0')
+        # Calcular promedios solo si existen registros
+        nota_asistencia = asistencias.aggregate(Avg('puntaje_general'))['puntaje_general__avg'] or Decimal('0')
+        nota_evaluacion = evaluaciones.aggregate(Avg('calificacion'))['calificacion__avg'] or Decimal('0')
+        nota_informe = informes.filter(calificacion__isnull=False).aggregate(
+            Avg('calificacion'))['calificacion__avg'] or Decimal('0')
 
-            self.nota_final = (nota_asistencia * Decimal('0.3')) + \
-                            (nota_evaluacion * Decimal('0.4')) + \
-                            (nota_informe * Decimal('0.3'))
-            self.save()
-            return self.nota_final
-        return None
+        # Calcular nota final con pesos
+        self.nota_final = (
+            (Decimal(str(nota_asistencia)) * Decimal('0.3')) +
+            (Decimal(str(nota_evaluacion)) * Decimal('0.4')) +
+            (Decimal(str(nota_informe)) * Decimal('0.3'))
+        )
+        
+        # Actualizar estado si todas las evaluaciones están completas
+        if (asistencias.exists() and 
+            evaluaciones.exists() and 
+            informes.filter(calificacion__isnull=False).exists()):
+            self.estado = 'EVALUADO'
+        
+        self.save()
+        return self.nota_final
+
 
     def clean(self):
         if self.fecha_fin < self.fecha_inicio:
@@ -154,7 +165,23 @@ class Informe(models.Model):
     documento = models.FileField(upload_to='informes/', null=True, blank=True)
     contenido = models.TextField()
     fecha_entrega = models.DateTimeField(auto_now_add=True)
+    calificacion = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    observaciones = models.TextField(blank=True, null=True)
+    evaluado_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='informes_evaluados')
+    fecha_evaluacion = models.DateTimeField(null=True, blank=True)
     aprobado = models.BooleanField(default=False)
+
+
+    def save(self, *args, **kwargs):
+        # Si el informe tiene calificación, actualizar el estado de aprobado
+        if self.calificacion is not None:
+            self.aprobado = self.calificacion >= 10.5
+        super().save(*args, **kwargs)
+
+        # Actualizar nota final de la práctica
+        if self.calificacion is not None:
+            self.practica.calcular_nota_final()
+
 
 class Evaluacion(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)

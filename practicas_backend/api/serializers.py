@@ -3,6 +3,7 @@ from .models import Usuario, Estudiante,ModuloPracticas, Practica, Asistencia, I
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 from django.utils import timezone
+from django.db.models import Avg
 
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
@@ -96,6 +97,11 @@ class PracticaSerializer(serializers.ModelSerializer):
     supervisor_id = serializers.IntegerField(write_only=True)
     modulo_id = serializers.IntegerField(write_only=True)
     
+    # Agregar campos para las notas individuales
+    nota_asistencia = serializers.SerializerMethodField()
+    nota_jurado = serializers.SerializerMethodField()
+    nota_informe = serializers.SerializerMethodField()
+    
     nota_final = serializers.DecimalField(
         max_digits=4,
         decimal_places=2,
@@ -114,15 +120,30 @@ class PracticaSerializer(serializers.ModelSerializer):
             'fecha_fin',
             'estado',
             'nota_final',
+            'nota_asistencia',
+            'nota_jurado',
+            'nota_informe',
             'horas_completadas'
         ]
 
-    def validate(self, data):
-        if data.get('fecha_fin') < data.get('fecha_inicio'):
-            raise serializers.ValidationError("La fecha de fin debe ser posterior a la fecha de inicio")
-        if data.get('horas_completadas', 0) < 0:
-            raise serializers.ValidationError("Las horas completadas no pueden ser negativas")
-        return data
+    def get_nota_asistencia(self, obj):
+        asistencias = Asistencia.objects.filter(practica=obj)
+        if asistencias.exists():
+            return asistencias.aggregate(Avg('puntaje_general'))['puntaje_general__avg']
+        return None
+
+    def get_nota_jurado(self, obj):
+        evaluaciones = Evaluacion.objects.filter(practica=obj)
+        if evaluaciones.exists():
+            return evaluaciones.aggregate(Avg('calificacion'))['calificacion__avg']
+        return None
+
+    def get_nota_informe(self, obj):
+        informes = Informe.objects.filter(practica=obj, calificacion__isnull=False)
+        if informes.exists():
+            return informes.aggregate(Avg('calificacion'))['calificacion__avg']
+        return None
+
 
 
 class AsistenciaSerializer(serializers.ModelSerializer):
@@ -185,10 +206,29 @@ class AsistenciaSerializer(serializers.ModelSerializer):
 
 
 class InformeSerializer(serializers.ModelSerializer):
+    estudiante_nombre = serializers.CharField(source='practica.estudiante.get_full_name', read_only=True)
+    documento_url = serializers.SerializerMethodField()
+    evaluador_nombre = serializers.CharField(source='evaluado_por.get_full_name', read_only=True)
+    modulo_nombre = serializers.CharField(source='practica.modulo.nombre', read_only=True)
+    modulo_tipo = serializers.CharField(source='practica.modulo.tipo_modulo', read_only=True)
+
     class Meta:
         model = Informe
-        fields = ['practica', 'documento', 'contenido']
-        read_only_fields = ['fecha_entrega', 'aprobado']
+        fields = [
+            'id', 'practica', 'documento', 'documento_url', 
+            'contenido', 'fecha_entrega', 'calificacion', 
+            'observaciones', 'evaluado_por', 'fecha_evaluacion',
+            'aprobado', 'estudiante_nombre', 'evaluador_nombre',
+            'modulo_nombre', 'modulo_tipo'
+        ]
+        read_only_fields = ['evaluado_por', 'fecha_evaluacion', 'aprobado']
+
+    def get_documento_url(self, obj):
+        if obj.documento:
+            return self.context['request'].build_absolute_uri(obj.documento.url)
+        return None
+
+
 class EvaluacionSerializer(serializers.ModelSerializer):
     jurado = UsuarioSerializer(read_only=True)
     

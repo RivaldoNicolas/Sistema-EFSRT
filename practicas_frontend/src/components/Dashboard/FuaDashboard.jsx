@@ -10,7 +10,7 @@ import { showAlert } from '../../redux/slices/alertSlice';
 import ChangePassword from './Users/ChangePassword';
 import UserProfile from './Users/UserProfile';
 import TeacherList from './Users/TeachersList';
-import NotaList from './Users/NotaList';
+import NotasFinalesAlumnos from '../Practicas/NotasFinalesAlumnos';
 
 
 
@@ -164,15 +164,15 @@ const FuaDashboard = () => {
 
   const menuItems = [
     { icon: <FaUsers />, text: "LISTA DE DOCENTE", component: 'TeacherList' },
-    { icon: <FaUsers />, text: "LISTA DE NOTAS", component: 'NotaList' },
+    { icon: <FaUsers />, text: "LISTA DE NOTAS", component: 'NotasFinalesAlumnos' },
   ];
 
   const renderComponent = () => {
     switch (currentComponent) {
       case 'TeacherList':
         return <TeacherList />;
-      case 'NotaList':
-        return <NotaList />;
+      case 'NotasFinalesAlumnos':
+        return <NotasFinalesAlumnos />;
       case 'profile':
         return <UserProfile />;
       case 'changePassword':

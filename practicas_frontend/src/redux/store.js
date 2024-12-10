@@ -7,6 +7,7 @@ import moduloReducer from "./slices/moduloSlice";
 import practicasReducer from "./slices/practicasSlice";
 import docenteReducer from "./slices/docenteSlice";
 import juradoReducer from "./slices/juradosSlice";
+import informeReducer from "./slices/informeSlice";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -17,5 +18,6 @@ export const store = configureStore({
     estudiantes: estudiantesReducer,
     docente: docenteReducer,
     jurado: juradoReducer,
+    informes: informeReducer,
   },
 });

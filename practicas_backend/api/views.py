@@ -301,7 +301,7 @@ class PracticaViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Practica.objects.select_related(
+        base_queryset = Practica.objects.select_related(
             'estudiante',
             'supervisor',
             'modulo'
@@ -310,12 +310,20 @@ class PracticaViewSet(viewsets.ModelViewSet):
         )
 
         if user.rol == 'ESTUDIANTE':
-            return queryset.filter(estudiante=user)
+            # Get unique practice IDs first
+            unique_practice_ids = base_queryset.filter(
+                estudiante=user
+            ).values('modulo').annotate(
+                max_id=models.Max('id')
+            ).values_list('max_id', flat=True)
+            
+            # Then filter by those IDs
+            return base_queryset.filter(id__in=unique_practice_ids)
         elif user.rol == 'DOCENTE':
-            return queryset.filter(supervisor=user)
+            return base_queryset.filter(supervisor=user)
         elif user.rol == 'JURADO':
-            return queryset.filter(asignacionjurado__jurado=user)
-        return queryset
+            return base_queryset.filter(asignacionjurado__jurado=user)
+        return base_queryset
 
     @action(detail=True, methods=['post'])
     def calcular_nota(self, request, pk=None):
@@ -360,74 +368,128 @@ class AsistenciaViewSet(viewsets.ModelViewSet):
 
 
 class InformeViewSet(viewsets.ModelViewSet):
-    queryset = Informe.objects.all()
     serializer_class = InformeSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['practica', 'aprobado']
     search_fields = ['practica__estudiante__username']
 
-    def get_permissions(self):
-        print(f"User: {self.request.user}")
-        print(f"User Role: {self.request.user.rol}")
-        if self.action == 'create':
-            return [IsAuthenticated(), EsEstudiante()]
-        elif self.action in ['evaluar_informe', 'pendientes_evaluacion']:
-            return [IsAuthenticated(), EsEncargadoPracticas()]
-        return [IsAuthenticated()]
-
     def get_queryset(self):
         user = self.request.user
+        queryset = Informe.objects.select_related(
+            'practica__estudiante',
+            'practica__supervisor',
+            'evaluado_por'
+        )
+
         if user.rol == 'ESTUDIANTE':
-            return Informe.objects.filter(practica__estudiante=user)
+            return queryset.filter(practica__estudiante=user)
         elif user.rol == 'PRACTICAS':
-            return Informe.objects.all()
+            return queryset
         elif user.rol == 'DOCENTE':
-            return Informe.objects.filter(practica__supervisor=user)
-        return Informe.objects.all()
-    
+            return queryset.filter(practica__supervisor=user)
+        return queryset.none()
+
     def create(self, request, *args, **kwargs):
+        try:
+            # Validar que el estudiante tenga una práctica activa
+            practica_id = request.data.get('practica')
+            if not practica_id:
+                return Response(
+                    {'error': 'Se requiere especificar una práctica'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            practica = Practica.objects.get(
+                id=practica_id,
+                estudiante=request.user,
+                estado__in=['PENDIENTE', 'EN_CURSO']
+            )
+
             serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
-                serializer.save()  # Remove estudiante parameter
+                serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 
-    @action(detail=True, methods=['post'])
-    def evaluar_informe(self, request, pk=None):
-        informe = self.get_object()
-        calificacion = request.data.get('calificacion')
-        observaciones = request.data.get('observaciones')
-
-        if not calificacion:
+        except Practica.DoesNotExist:
             return Response(
-                {'error': 'La calificación es requerida'}, 
+                {'error': 'No se encontró una práctica válida'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        informe.calificacion = calificacion
-        informe.observaciones = observaciones
-        informe.evaluado_por = request.user
-        informe.fecha_evaluacion = timezone.now()
-        informe.save()
+    @action(detail=True, methods=['post'])
+    def evaluar_informe(self, request, pk=None):
+        try:
+            informe = self.get_object()
+            calificacion = request.data.get('calificacion')
+            observaciones = request.data.get('observaciones')
 
-        # Actualizar nota final
-        practica = informe.practica
-        practica.nota_final = practica.calcular_nota_final()
-        practica.save()
+            if not calificacion:
+                return Response(
+                    {'error': 'La calificación es requerida'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        return Response({
-            'message': 'Informe evaluado exitosamente',
-            'calificacion': informe.calificacion,
-            'nota_final': practica.nota_final
-        })
+            try:
+                calificacion = Decimal(calificacion)
+                if not 0 <= calificacion <= 20:
+                    raise ValueError()
+            except (TypeError, ValueError):
+                return Response(
+                    {'error': 'La calificación debe ser un número entre 0 y 20'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            informe.calificacion = calificacion
+            informe.observaciones = observaciones
+            informe.evaluado_por = request.user
+            informe.fecha_evaluacion = timezone.now()
+            informe.save()
+
+            # Actualizar estado de la práctica si es necesario
+            practica = informe.practica
+            practica.calcular_nota_final()
+
+            return Response({
+                'message': 'Informe evaluado exitosamente',
+                'calificacion': informe.calificacion,
+                'nota_final': practica.nota_final
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=False, methods=['get'])
     def pendientes_evaluacion(self, request):
-        informes = Informe.objects.filter(calificacion__isnull=True)
+        informes = self.get_queryset().filter(
+            calificacion__isnull=True,
+            fecha_evaluacion__isnull=True
+        ).order_by('fecha_entrega')
         serializer = self.get_serializer(informes, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def mis_informes(self, request):
+        if request.user.rol != 'ESTUDIANTE':
+            return Response(
+                {'error': 'Solo disponible para estudiantes'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        informes = self.get_queryset().order_by('-fecha_entrega')
+        serializer = self.get_serializer(informes, many=True)
+        return Response(serializer.data)
+
+
 
 class EvaluacionViewSet(viewsets.ModelViewSet):
     queryset = Evaluacion.objects.all()

@@ -56,8 +56,9 @@ export const createPractica = createAsyncThunk(
 
 export const fetchPracticas = createAsyncThunk(
   "practicas/fetchAll",
-  async () => {
-    const response = await api.get("/practicas/");
+  async (_, { getState }) => {
+    const userId = getState().auth.user?.id;
+    const response = await api.get(`/practicas/?estudiante=${userId}`);
     return response.data;
   }
 );

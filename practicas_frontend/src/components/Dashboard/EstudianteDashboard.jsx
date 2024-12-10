@@ -5,13 +5,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
-import { FaUserCircle, FaSignOutAlt, FaInfo, FaUserPlus, FaCalendarCheck, FaBars, FaKey } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaInfo, FaUserPlus, FaGraduationCap, FaClipboardCheck, FaFileUpload, FaCalendarCheck, FaBars, FaKey } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice'
 import ChangePassword from './Users/ChangePassword';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
 import EvaluacionE from './Estudiante/EvaluacionE';
 import Asistencia from './Estudiante/Asistencia';
+import CrearInforme from './Estudiante/CrearInforme';
+import VerEvaluaciones from './Estudiante/VerEvaluaciones';
+import VerNotaFinal from './Estudiante/VerNotaFinal';
 
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
@@ -164,6 +167,17 @@ const EstudianteDashboard = () => {
     const menuItems = [
         { icon: <FaUserPlus />, text: "ASISTENCIA", component: 'asistencia' },
         { icon: <FaCalendarCheck />, text: "EVALUACIÓN INFORME", component: 'evaluacionE' },
+        { icon: <FaFileUpload />, text: "CREAR INFORME", component: 'crearInforme' },
+        {
+            icon: <FaClipboardCheck />,
+            text: "MIS EVALUACIONES",
+            component: 'evaluaciones'
+        },
+        {
+            icon: <FaGraduationCap />,
+            text: "NOTAS FINALES",
+            component: 'notasFinales'
+        },
     ];
 
     const renderComponent = () => {
@@ -172,6 +186,12 @@ const EstudianteDashboard = () => {
                 return <Asistencia />;
             case 'evaluacionE':
                 return <EvaluacionE />;
+            case 'crearInforme':
+                return <CrearInforme />;
+            case 'evaluaciones':
+                return <VerEvaluaciones />;
+            case 'notasFinales':
+                return <VerNotaFinal />;
             case 'usersList':
                 return <UserList />;
             case 'profile':
