@@ -40,7 +40,7 @@ jobs:
 
       - name: Install dependencies (backend)
         run: |
-          cd practicas_backend || exit 1
+          cd Sistema-EFSRT/practicas_backend || exit 1
           pip install -r requirements.txt
 
       - name: Set environment variables
@@ -51,19 +51,22 @@ jobs:
           echo "DATABASE_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "DATABASE_PORT=3306" >> $GITHUB_ENV
 
-      - name: Django migrations
+      - name: Verify manage.py location
         run: |
-          cd practicas_backend || exit 1
-          if [ ! -f "manage.py" ]; then
-            echo "Error: manage.py no encontrado en practicas_backend"
+          if [ ! -f "Sistema-EFSRT/practicas_backend/manage.py" ]; then
+            echo "Error: manage.py no encontrado en Sistema-EFSRT/practicas_backend"
             exit 1
           fi
+
+      - name: Django migrations
+        run: |
+          cd Sistema-EFSRT/practicas_backend || exit 1
           python manage.py makemigrations
           python manage.py migrate
 
       - name: Run Django tests
         run: |
-          cd practicas_backend || exit 1
+          cd Sistema-EFSRT/practicas_backend || exit 1
           python manage.py test
 
   # Job para el frontend (React + Vite)
@@ -81,15 +84,15 @@ jobs:
 
       - name: Install dependencies (frontend)
         run: |
-          cd practicas_frontend || exit 1
+          cd Sistema-EFSRT/practicas_frontend || exit 1
           npm install
 
       - name: Build frontend
         run: |
-          cd practicas_frontend || exit 1
+          cd Sistema-EFSRT/practicas_frontend || exit 1
           npm run build
 
       - name: Run frontend tests
         run: |
-          cd practicas_frontend || exit 1
+          cd Sistema-EFSRT/practicas_frontend || exit 1
           npm test
