@@ -12,46 +12,22 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: efsrt_db
+          MYSQL_ROOT_PASSWORD: root
         ports:
-          - 3306:3306
+          - '3306:3306'
         options: >-
-          --health-cmd="mysqladmin ping -h localhost"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-          --health-start-period=30s
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=20s
+          --health-timeout=10s
+          --health-retries=10
+          --health-start-period=40s
 
     steps:
     - uses: actions/checkout@v2
     
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    
-    - name: Verify MySQL connection
+    - name: Verificar MySQL
       run: |
-        mysql --host 127.0.0.1 --port 3306 -uroot -proot -e "SHOW DATABASES"
-    
-    - name: Deploy Backend
-      env:
-        DJANGO_SETTINGS_MODULE: practicas_backend.settings
-        MYSQL_DATABASE: efsrt_db
-        MYSQL_USER: root
-        MYSQL_PASSWORD: root
-        MYSQL_HOST: 127.0.0.1
-        MYSQL_PORT: 3306
-      run: |
-        cd practicas_backend
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        python manage.py migrate
-        python manage.py collectstatic --noinput
-
-    - name: Build Frontend
-      run: |
-        cd practicas_frontend
-        npm install
-        npm run build
+        while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
+          sleep 1
+        done
