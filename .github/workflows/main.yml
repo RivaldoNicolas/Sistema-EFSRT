@@ -10,10 +10,11 @@ jobs:
     
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:5.7
         env:
           MYSQL_DATABASE: efsrt_db
           MYSQL_ROOT_PASSWORD: root
+          MYSQL_ALLOW_EMPTY_PASSWORD: no
         ports:
           - '3306:3306'
         options: >-
@@ -21,13 +22,10 @@ jobs:
           --health-interval=20s
           --health-timeout=10s
           --health-retries=10
-          --health-start-period=40s
 
     steps:
     - uses: actions/checkout@v2
     
-    - name: Verificar MySQL
+    - name: Esperar MySQL
       run: |
-        while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
-          sleep 1
-        done
+        timeout 30s bash -c "until mysql -h127.0.0.1 -uroot -proot -e 'SELECT 1;'; do sleep 2; done"
