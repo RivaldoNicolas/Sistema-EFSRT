@@ -1,0 +1,40 @@
+name: Deploy Django-React App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create database.yml
+      run: |
+        cat > config/database.yml <<EOL
+        test:
+          adapter: mysql2
+          database: ${{ secrets.DB_NAME }}
+          username: ${{ secrets.DB_USER }}
+          password: ${{ secrets.DB_PASSWORD }}
+          host: 127.0.0.1
+          port: 3306
+        EOL

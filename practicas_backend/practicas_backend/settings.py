@@ -87,10 +87,17 @@ WSGI_APPLICATION = 'practicas_backend.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
+<<<<<<< HEAD
         "NAME": os.environ.get('DB_NAME', 'efsrt_db'),
         "USER": os.environ.get('DB_USER', 'root'),
         "PASSWORD": os.environ.get('DB_PASSWORD', 'root'),
         "HOST": os.environ.get('DB_HOST', '127.0.0.1'),
+=======
+        "NAME": "efsrt_db",
+        "USER": "root",
+        "PASSWORD": "",
+        "HOST": "localhost",
+>>>>>>> e6d802d2192bc94190990fa40c1fed804bfb33b0
         "PORT": "3306",
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
