@@ -2,20 +2,20 @@ name: Deploy Django-React App
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    
+
     services:
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
-          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          MYSQL_USER: ${{ secrets.DB_USER }}
-          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE: efsrt_db
+          MYSQL_ROOT_PASSWORD: ""
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_HOST: localhost
         ports:
           - 3306:3306
         options: >-
@@ -25,16 +25,39 @@ jobs:
           --health-retries=3
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Create database.yml
-      run: |
-        cat > config/database.yml <<EOL
-        test:
-          adapter: mysql2
-          database: ${{ secrets.DB_NAME }}
-          username: ${{ secrets.DB_USER }}
-          password: ${{ secrets.DB_PASSWORD }}
-          host: 127.0.0.1
-          port: 3306
-        EOL
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install Dependencies
+        run: |
+          cd practicas_backend
+          working-directory: ./practicas_backend 
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Migrations
+        env:
+          DJANGO_SETTINGS_MODULE: practicas_backend.settings
+          DB_NAME: efsrt_db
+          DB_USER: root
+          DB_PASSWORD: ""
+          DB_HOST: localhost
+        run: |
+          cd practicas_backend
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+
+      - name: Build Frontend
+        run: |
+          cd practicas_frontend
+          npm install
+          npm run build

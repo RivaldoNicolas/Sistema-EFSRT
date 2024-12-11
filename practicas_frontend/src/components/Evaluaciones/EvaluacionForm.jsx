@@ -36,12 +36,21 @@ const EvaluacionForm = ({ practicaId, onSuccess }) => {
     useEffect(() => {
         const verificarEvaluacionPrevia = async () => {
             try {
-                const response = await api.get(`/evaluaciones/?practica=${practicaId}`);
-                const yaEvaluado = response.data.some(evaluacion =>
-                    evaluacion.jurado.id === user.id
+                // Verificar solo las evaluaciones específicas de esta práctica y este jurado
+                const response = await api.get(`/evaluaciones/`, {
+                    params: {
+                        practica: practicaId,
+                        jurado: user.id
+                    }
+                });
+
+                // Solo deshabilitar si hay evaluaciones específicas de este jurado
+                const evaluacionesJurado = response.data.filter(
+                    evaluacion => evaluacion.jurado.id === user.id &&
+                        evaluacion.practica.id === parseInt(practicaId)
                 );
 
-                if (yaEvaluado) {
+                if (evaluacionesJurado.length > 0) {
                     setError("Ya has evaluado esta práctica anteriormente");
                     setFormDisabled(true);
                 }
@@ -50,8 +59,11 @@ const EvaluacionForm = ({ practicaId, onSuccess }) => {
             }
         };
 
-        verificarEvaluacionPrevia();
-    }, [practicaId, user.id]);
+        if (practicaId && user?.id) {
+            verificarEvaluacionPrevia();
+        }
+    }, [practicaId, user?.id]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
