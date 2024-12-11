@@ -12,20 +12,29 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_DATABASE: efsrt_db
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_ALLOW_EMPTY_PASSWORD: no
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ports:
-          - '3306:3306'
+          - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -proot"
-          --health-interval=20s
-          --health-timeout=10s
-          --health-retries=10
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
     - uses: actions/checkout@v2
-    
-    - name: Esperar MySQL
+
+    - name: Create database.yml
       run: |
-        timeout 30s bash -c "until mysql -h127.0.0.1 -uroot -proot -e 'SELECT 1;'; do sleep 2; done"
+        cat > config/database.yml <<EOL
+        test:
+          adapter: mysql2
+          database: ${{ secrets.DB_NAME }}
+          username: ${{ secrets.DB_USER }}
+          password: ${{ secrets.DB_PASSWORD }}
+          host: 127.0.0.1
+          port: 3306
+        EOL
