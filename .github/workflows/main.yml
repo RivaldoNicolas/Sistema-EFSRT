@@ -37,10 +37,15 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install dependencies (backend)
+      - name: Create and activate virtual environment
         run: |
           cd practicas_backend
           python -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies (backend)
+        run: |
+          cd practicas_backend
           source venv/bin/activate
           pip install -r requirements.txt
 
@@ -65,6 +70,7 @@ jobs:
           source venv/bin/activate
           python manage.py test
 
+  # Job para el frontend (React + Vite)
   frontend:
     runs-on: ubuntu-latest
 
