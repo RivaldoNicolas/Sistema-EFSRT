@@ -231,13 +231,15 @@ class InformeSerializer(serializers.ModelSerializer):
 
 class EvaluacionSerializer(serializers.ModelSerializer):
     jurado = UsuarioSerializer(read_only=True)
+    practica_details = PracticaSerializer(source='practica', read_only=True)
     
     class Meta:
         model = Evaluacion
         fields = [
-            'id', 
-            'practica', 
-            'jurado', 
+            'id',
+            'practica',
+            'practica_details',
+            'jurado',
             'calificacion',
             'fecha_evaluacion',
             'observaciones',
@@ -246,40 +248,38 @@ class EvaluacionSerializer(serializers.ModelSerializer):
         read_only_fields = ['fecha_evaluacion', 'jurado']
 
     def validate(self, data):
-        # Validate calificacion
         if 'calificacion' in data and not 0 <= data['calificacion'] <= 20:
             raise serializers.ValidationError({
                 "calificacion": "La calificación debe estar entre 0 y 20"
             })
-            
-        # Validate criterios_evaluados structure
+           
         if 'criterios_evaluados' in data:
             required_criterios = [
                 'presentacion',
-                'conocimiento_teorico', 
+                'conocimiento_teorico',
                 'habilidades_practicas',
                 'actitud_profesional'
             ]
-            
+           
             for criterio in required_criterios:
                 if criterio not in data['criterios_evaluados']:
                     raise serializers.ValidationError({
                         "criterios_evaluados": f"Falta el criterio {criterio}"
                     })
-                
+               
                 valor = data['criterios_evaluados'][criterio]
                 if not 0 <= float(valor) <= 20:
                     raise serializers.ValidationError({
                         "criterios_evaluados": f"El valor de {criterio} debe estar entre 0 y 20"
                     })
-        
+       
         return data
 
     def create(self, validated_data):
-        # Set fecha_evaluacion automatically
         validated_data['fecha_evaluacion'] = timezone.now()
         return super().create(validated_data)
-
+    
+    
     
 class AsignacionDocenteSerializer(serializers.ModelSerializer):
     docente = UsuarioSerializer(read_only=True)

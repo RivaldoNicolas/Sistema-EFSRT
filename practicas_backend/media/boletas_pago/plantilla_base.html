@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>{% block title %} {% endblock  %}</title>
+   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+   <h1>Welcome to my page</h1>
+   <ul>
+      <li><a href="{% url 'home' %}">Home</a></li>
+      <li><a href="{% url 'paginaNosotros' %}">Nosotros</a></li>
+      <li><a href="{% url 'paginaForm' %}">Formulario</a></li>
+      <li><a href="{% url 'paginaFotos' %}">Fotos</a></li>
+      <li><a href="{% url 'paginaLogin' %}">Login</a></li>
+      <li><a href="{% url 'paginaNuevoCliente' %}">Registrar Cliente</a></li>
+   </ul>
+   {% block content %}
+      
+   {% endblock  %}
+</body>
+</html>
+
+
+python -m venv venv
+.\venv\Scripts\Activate.ps1 
+pip install django 
+django-admin startproject django07 
+cd django07 
+python manage.py startapp noticia 
+python manage.py makemigrations 
+python manage.py migrate 
+python manage.py createsuperuser 
+python manage.py runserver

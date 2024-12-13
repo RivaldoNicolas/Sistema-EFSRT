@@ -10,11 +10,6 @@ const ModuleManagement = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const handleModuleSelect = (modulo) => {
-        setSelectedModulo(modulo);
-        // Update the path to match your route configuration
-        navigate(`modulos/${modulo.id}/asignaciones`, { state: { moduloData: modulo } });
-    };
     const renderView = () => {
         switch (currentView) {
             case 'create':
@@ -23,7 +18,7 @@ const ModuleManagement = () => {
             default:
                 return (
                     <ListarModulos
-                        onModuleSelect={handleModuleSelect}
+                        algo salio mal
                     />
                 );
         }

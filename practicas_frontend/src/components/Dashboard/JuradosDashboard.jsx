@@ -189,74 +189,11 @@ const JuradosDashboard = () => {
                 return <ChangePassword />;
             default:
                 return (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white p-4 rounded-3 shadow-sm"
-                    >
-                        <div className="text-center mb-4">
-                            <h2 className="text-primary fw-bold">¡Bienvenido al Sistema de Evaluación!</h2>
-                            <p className="text-muted"> {user?.username} | Rol: {user?.rol}</p>
-                        </div>
 
-                        <div className="row g-4 mt-2">
-                            <div className="col-md-4">
-                                <div className="card h-100 border-0 shadow-sm">
-                                    <div className="card-body text-center">
-                                        <FaUsers className="text-primary mb-3" size={40} />
-                                        <h5 className="card-title">Gestión de Usuarios</h5>
-                                        <p className="card-text">Administra los usuarios del sistema, crea nuevas cuentas y gestiona permisos.</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <ListaPracticaJurados
+                        setCurrentComponent={setCurrentComponent}
+                        setSelectedPracticaId={setSelectedPracticaId} />
 
-                            <div className="col-md-4">
-                                <div className="card h-100 border-0 shadow-sm">
-                                    <div className="card-body text-center">
-                                        <FaCalendarCheck className="text-success mb-3" size={40} />
-                                        <h5 className="card-title">Evaluaciones Diarias</h5>
-                                        <p className="card-text">Realiza seguimiento y evaluación del desempeño diario de los estudiantes.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-md-4">
-                                <div className="card h-100 border-0 shadow-sm">
-                                    <div className="card-body text-center">
-                                        <FaChalkboardTeacher className="text-info mb-3" size={40} />
-                                        <h5 className="card-title">Evaluación de Exposiciones</h5>
-                                        <p className="card-text">Gestiona y califica las presentaciones y exposiciones de los estudiantes.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 p-3 bg-light rounded-3">
-                            <h4 className="text-secondary mb-3">Accesos Rápidos</h4>
-                            <div className="row g-3">
-                                <div className="col-md-6">
-                                    <button
-                                        className="btn btn-outline-primary w-100"
-                                        onClick={() => setCurrentComponent('createUser')}
-                                    >
-                                        <FaUserPlus className="me-2" /> Crear Nuevo Usuario
-                                    </button>
-                                </div>
-                                <div className="col-md-6">
-                                    <button
-                                        className="btn btn-outline-success w-100"
-                                        onClick={() => setCurrentComponent('usersList')}
-                                    >
-                                        <FaUsers className="me-2" /> Ver Lista de Usuarios
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 text-center text-muted">
-                            <p>Para comenzar, selecciona una opción del menú lateral o usa los accesos rápidos.</p>
-                        </div>
-                    </motion.div>
                 );
         }
     };

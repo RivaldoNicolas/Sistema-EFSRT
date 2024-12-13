@@ -7,7 +7,10 @@ import AlertManager from './components/Alert/AlertManager';
 function App() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
+      <BrowserRouter future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}>
         <div className="App">
           <AlertManager />
           <AppRoutes />
@@ -16,5 +19,4 @@ function App() {
     </Provider>
   );
 }
-
 export default App;

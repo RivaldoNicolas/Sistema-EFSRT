@@ -18,7 +18,7 @@ export const fetchJurados = createAsyncThunk(
 );
 
 export const fetchJuradosAsignados = createAsyncThunk(
-  "modulos/fetchJuradosAsignados",
+  "modulos/listarJuradosAsignados",
   async (moduloId, { getState }) => {
     const token = getState().auth.token;
     const response = await api.get(`/modulos/${moduloId}/listar-jurados/`, {
@@ -26,7 +26,7 @@ export const fetchJuradosAsignados = createAsyncThunk(
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data.data; // Asegúrate de que el backend devuelve los datos en este formato
+    return response.data.data;
   }
 );
 
@@ -131,9 +131,15 @@ export const fetchJuradosDisponibles = createAsyncThunk(
 
 export const listarJuradosAsignados = createAsyncThunk(
   "modulos/listarJuradosAsignados",
-  async (moduloId) => {
-    const response = await api.get(`/modulos/${moduloId}/listar-jurados/`);
-    return response.data;
+  async (moduloId, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/modulos/${moduloId}/listar-jurados/`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error al obtener los datos"
+      );
+    }
   }
 );
 
@@ -155,12 +161,12 @@ const moduloSlice = createSlice({
   initialState: {
     modulos: [],
     selectedModulo: null,
-    loading: false,
-    error: null,
     currentModulo: null,
     juradosAsignados: [], // Inicializar como un arreglo vacío
     juradoAsignado: null,
     jurados: [],
+    loading: false,
+    error: null,
   },
   reducers: {
     clearModuloError: (state) => {
@@ -169,18 +175,18 @@ const moduloSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(listarJuradosAsignados.fulfilled, (state, action) => {
-        state.loading = false;
-        state.juradosAsignados = action.payload.data || []; // Asegúrate de acceder a 'data'
-      })
       .addCase(listarJuradosAsignados.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+      .addCase(listarJuradosAsignados.fulfilled, (state, action) => {
+        state.loading = false;
+        state.juradosAsignados = action.payload;
+        state.error = null;
+      })
       .addCase(listarJuradosAsignados.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
-        state.juradosAsignados = [];
+        state.error = action.payload;
       })
 
       .addCase(asignarJurado.pending, (state) => {

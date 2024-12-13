@@ -6,12 +6,74 @@ import { showAlert } from '../../../redux/slices/alertSlice';
 import styled from 'styled-components';
 import userService from '../../../services/userService';
 
+const NAVY_BLUE = '#1a365d';
+const LIGHT_BLUE = '#2563eb';
+
 const StyledCard = styled(Card)`
   max-width: 500px;
   margin: 0 auto;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+`;
+
+const CardHeader = styled(Card.Header)`
+  background: linear-gradient(135deg, ${NAVY_BLUE} 0%, ${LIGHT_BLUE} 100%);
+  color: white;
+  padding: 1.5rem;
+  border: none;
+
+  h4 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+`;
+
+const StyledFormGroup = styled(Form.Group)`
+  margin-bottom: 1.5rem;
+
+  label {
+    font-weight: 500;
+    color: ${NAVY_BLUE};
+    margin-bottom: 0.5rem;
+  }
+
+  input {
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+
+    &:focus {
+      border-color: ${LIGHT_BLUE};
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+      outline: none;
+    }
+  }
+`;
+
+const StyledButton = styled(Button)`
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, ${LIGHT_BLUE} 0%, ${NAVY_BLUE} 100%);
+  border: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
 const ChangePassword = () => {
@@ -30,8 +92,6 @@ const ChangePassword = () => {
             [name]: value
         }));
     };
-
-    // ... imports permanecen igual
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -67,18 +127,20 @@ const ChangePassword = () => {
             }));
         }
     };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
         >
             <StyledCard>
-                <Card.Header className="bg-primary text-white">
-                    <h4 className="mb-0">Cambiar Contraseña</h4>
-                </Card.Header>
-                <Card.Body>
+                <CardHeader>
+                    <h4>Cambiar Contraseña</h4>
+                </CardHeader>
+                <Card.Body className="p-4">
                     <Form onSubmit={handleSubmit}>
-                        <Form.Group className="mb-3">
+                        <StyledFormGroup>
                             <Form.Label>Contraseña Actual</Form.Label>
                             <Form.Control
                                 type="password"
@@ -86,10 +148,11 @@ const ChangePassword = () => {
                                 value={passwords.currentPassword}
                                 onChange={handleChange}
                                 required
+                                autoComplete="current-password"
                             />
-                        </Form.Group>
+                        </StyledFormGroup>
 
-                        <Form.Group className="mb-3">
+                        <StyledFormGroup>
                             <Form.Label>Nueva Contraseña</Form.Label>
                             <Form.Control
                                 type="password"
@@ -97,10 +160,11 @@ const ChangePassword = () => {
                                 value={passwords.newPassword}
                                 onChange={handleChange}
                                 required
+                                autoComplete="new-password"
                             />
-                        </Form.Group>
+                        </StyledFormGroup>
 
-                        <Form.Group className="mb-3">
+                        <StyledFormGroup>
                             <Form.Label>Confirmar Nueva Contraseña</Form.Label>
                             <Form.Control
                                 type="password"
@@ -108,12 +172,13 @@ const ChangePassword = () => {
                                 value={passwords.confirmPassword}
                                 onChange={handleChange}
                                 required
+                                autoComplete="new-password"
                             />
-                        </Form.Group>
+                        </StyledFormGroup>
 
-                        <Button variant="primary" type="submit" className="w-100">
+                        <StyledButton type="submit">
                             Actualizar Contraseña
-                        </Button>
+                        </StyledButton>
                     </Form>
                 </Card.Body>
             </StyledCard>

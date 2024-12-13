@@ -10,6 +10,18 @@ export const createEstudiante = createAsyncThunk(
   }
 );
 
+export const fetchEvaluacionesJurado = createAsyncThunk(
+  "estudiantes/fetchEvaluacionesJurado",
+  async () => {
+    try {
+      const response = await axios.get("/api/evaluaciones/mis-evaluaciones/");
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
 export const subirBoletaThunk = createAsyncThunk(
   "estudiantes/subirBoleta",
   async ({ estudianteId, file }) => {
@@ -36,6 +48,7 @@ const estudiantesSlice = createSlice({
   name: "estudiantes",
   initialState: {
     estudiantes: [],
+    evaluacionesJurado: [],
     status: "idle",
     error: null,
     boletasStatus: {},
@@ -44,6 +57,17 @@ const estudiantesSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchEvaluacionesJurado.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchEvaluacionesJurado.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.evaluacionesJurado = action.payload;
+      })
+      .addCase(fetchEvaluacionesJurado.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      })
       .addCase(fetchUsersByRole.pending, (state) => {
         state.status = "loading";
       })

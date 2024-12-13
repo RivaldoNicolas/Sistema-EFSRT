@@ -24,9 +24,17 @@ export const fetchPracticasAsignadas = createAsyncThunk(
 );
 
 export const fetchEvaluaciones = createAsyncThunk(
-  "jurado/fetchEvaluaciones",
-  async () => {
-    const response = await api.get("/evaluaciones/");
+  "jurados/fetchEvaluaciones",
+  async (_, { getState }) => {
+    const token = getState().auth.token;
+    const response = await api.get("/evaluaciones/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: {
+        expand: "practica.estudiante,practica.modulo",
+      },
+    });
     return response.data;
   }
 );
@@ -59,9 +67,14 @@ export const updateEvaluacion = createAsyncThunk(
 );
 
 export const deleteEvaluacion = createAsyncThunk(
-  "jurado/deleteEvaluacion",
-  async (id) => {
-    await api.delete(`/evaluaciones/${id}/`);
+  "jurados/deleteEvaluacion",
+  async (id, { getState }) => {
+    const token = getState().auth.token;
+    await api.delete(`/evaluaciones/${id}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return id;
   }
 );

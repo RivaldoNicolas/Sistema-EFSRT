@@ -136,7 +136,7 @@ const EvaluacionForm = ({ practicaId, onSuccess }) => {
             <Container className="py-4">
                 <Card className="shadow">
                     <Card.Header className="bg-primary bg-gradient text-white py-3">
-                        <h3 className="mb-0">Evaluación de Práctica Profesional</h3>
+                        <h3 className="mb-0">Evaluación de las EFSRT</h3>
                     </Card.Header>
                     <Card.Body className="p-4">
                         {formDisabled && (

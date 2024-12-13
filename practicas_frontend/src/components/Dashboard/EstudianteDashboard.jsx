@@ -10,7 +10,7 @@ import { showAlert } from '../../redux/slices/alertSlice'
 import ChangePassword from './Users/ChangePassword';
 import UserList from './Users/UserList';
 import UserProfile from './Users/UserProfile';
-import EvaluacionE from './Estudiante/EvaluacionE';
+import VerEvaluacionesJurados from './Estudiante/VerEvaluacionesJurados';
 import Asistencia from './Estudiante/Asistencia';
 import CrearInforme from './Estudiante/CrearInforme';
 import VerEvaluaciones from './Estudiante/VerEvaluaciones';
@@ -166,7 +166,7 @@ const EstudianteDashboard = () => {
 
     const menuItems = [
         { icon: <FaUserPlus />, text: "ASISTENCIA", component: 'asistencia' },
-        { icon: <FaCalendarCheck />, text: "EVALUACIÓN INFORME", component: 'evaluacionE' },
+        { icon: <FaCalendarCheck />, text: "EVALUACIÓN INFORME", component: 'verEvaluacionesJurados' },
         { icon: <FaFileUpload />, text: "CREAR INFORME", component: 'crearInforme' },
         {
             icon: <FaClipboardCheck />,
@@ -184,8 +184,8 @@ const EstudianteDashboard = () => {
         switch (currentComponent) {
             case 'asistencia':
                 return <Asistencia />;
-            case 'evaluacionE':
-                return <EvaluacionE />;
+            case 'verEvaluacionesJurados':
+                return <VerEvaluacionesJurados />;
             case 'crearInforme':
                 return <CrearInforme />;
             case 'evaluaciones':
@@ -199,6 +199,8 @@ const EstudianteDashboard = () => {
             case 'changePassword':
                 return <ChangePassword />;
             default:
+                return <Asistencia />;;
+
 
         }
     };

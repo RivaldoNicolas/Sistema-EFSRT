@@ -7,7 +7,7 @@ import { logout } from '../../redux/slices/authSlice';
 import styled from 'styled-components';
 import {
     FaUserCircle, FaSignOutAlt, FaInfo, FaUsers, FaUserPlus,
-    FaGraduationCap, FaFileAlt, FaBars, FaKey, FaBookReader,
+    FaGraduationCap, FaFileAlt, FaBars, FaKey,
     FaGavel, FaLayerGroup, FaPlus
 } from 'react-icons/fa';
 import { showAlert } from '../../redux/slices/alertSlice';
@@ -263,15 +263,7 @@ const PracticaDashboard = () => {
                             </p>
                         </div>
 
-                        {/* Quick access cards */}
-                        <div className="row g-4 mt-2">
-                            {/* ... (cards content remains the same) ... */}
-                        </div>
-
-                        {/* Quick access buttons */}
-                        <div className="mt-4 p-3 bg-light rounded-3">
-                            {/* ... (buttons content remains the same) ... */}
-                        </div>
+                        <ModuleManagement />
                     </motion.div>
                 );
         }

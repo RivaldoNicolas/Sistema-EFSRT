@@ -1,9 +1,7 @@
-// ListarJuradosAsignados.jsx
 import React, { useEffect, useState } from 'react';
-import { Table, Alert, Spinner, Form } from 'react-bootstrap';
+import { Table, Alert, Spinner, Form, Card, Container, Row, Col } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchModulos, listarJuradosAsignados } from '../../redux/slices/moduloSlice';
-
 
 const ListarJuradosAsignados = () => {
     const dispatch = useDispatch();
@@ -20,65 +18,89 @@ const ListarJuradosAsignados = () => {
         }
     }, [selectedModulo, dispatch]);
 
-    // Asegúrate de que juradosAsignados sea un arreglo
-    const jurados = Array.isArray(juradosAsignados) ? juradosAsignados : [];
-
     return (
-        <div className="mt-4">
-            <h4 className="mb-4">Jurados Asignados al Módulo</h4>
-            <Form.Group controlId="moduloSelect">
-                <Form.Label>Seleccione un Módulo</Form.Label>
-                <Form.Control
-                    as="select"
-                    value={selectedModulo}
-                    onChange={(e) => setSelectedModulo(e.target.value)}
-                >
-                    <option value="">Seleccione...</option>
-                    {modulos.map((modulo) => (
-                        <option key={modulo.id} value={modulo.id}>
-                            {modulo.nombre}
-                        </option>
-                    ))}
-                </Form.Control>
-            </Form.Group>
+        <Container fluid>
+            <Row className="mt-4">
+                <Col>
+                    <h4 className="mb-4">Jurados y Estudiantes por Módulo</h4>
 
-            {loading ? (
-                <div className="text-center p-4">
-                    <Spinner animation="border" variant="primary" />
-                </div>
-            ) : error ? (
-                <Alert variant="danger" className="mt-3">
-                    {error}
-                </Alert>
-            ) : (
-                <div>
-                    {jurados.length === 0 ? (
-                        <Alert variant="info" className="mt-3">
-                            No hay jurados asignados a este módulo.
-                        </Alert>
+                    <Form.Group className="mb-4">
+                        <Form.Label>Seleccione un Módulo</Form.Label>
+                        <Form.Select
+                            value={selectedModulo}
+                            onChange={(e) => setSelectedModulo(e.target.value)}
+                        >
+                            <option value="">Seleccione un módulo...</option>
+                            {modulos.map((modulo) => (
+                                <option key={modulo.id} value={modulo.id}>
+                                    {modulo.nombre}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </Form.Group>
+
+                    {loading ? (
+                        <div className="text-center">
+                            <Spinner animation="border" variant="primary" />
+                        </div>
+                    ) : error ? (
+                        <Alert variant="danger">{error}</Alert>
+                    ) : juradosAsignados.length > 0 ? (
+                        juradosAsignados.map((jurado) => (
+                            <Card key={jurado.jurado__id} className="mb-4">
+                                <Card.Header className="bg-primary text-white">
+                                    <h5 className="mb-0">
+                                        Jurado: {jurado.jurado__first_name}
+                                    </h5>
+                                    <small>Usuario: {jurado.jurado__username}</small>
+                                </Card.Header>
+                                <Card.Body>
+                                    {jurado.estudiantes.length > 0 ? (
+                                        <Table striped bordered hover responsive>
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Estudiante</th>
+                                                    <th>Estado</th>
+                                                    <th>Fecha Asignación</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {jurado.estudiantes.map((estudiante, index) => (
+                                                    <tr key={index}>
+                                                        <td>{index + 1}</td>
+                                                        <td>{estudiante.nombre}</td>
+                                                        <td>
+                                                            <span className={`badge bg-${estudiante.estado === 'PENDIENTE'
+                                                                    ? 'warning'
+                                                                    : 'success'
+                                                                }`}>
+                                                                {estudiante.estado}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            {new Date(estudiante.fecha_asignacion).toLocaleDateString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    ) : (
+                                        <Alert variant="info">
+                                            No hay estudiantes asignados a este jurado
+                                        </Alert>
+                                    )}
+                                </Card.Body>
+                            </Card>
+                        ))
                     ) : (
-                        <Table striped bordered hover responsive className="mt-3">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>ID del Jurado</th>
-                                    <th>Nombre de Usuario</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {jurados.map((jurado, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>{jurado.jurado__id}</td>
-                                        <td>{jurado.jurado__username}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
+                        <Alert variant="info">
+                            No hay jurados asignados para este módulo
+                        </Alert>
                     )}
-                </div>
-            )}
-        </div>
+                </Col>
+            </Row>
+        </Container>
     );
 };
 

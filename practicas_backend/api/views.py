@@ -195,10 +195,43 @@ class ModuloPracticasViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='listar-jurados')
     def listar_jurados(self, request, pk=None):
-        modulo = self.get_object()
-        jurados = AsignacionJurado.objects.filter(practica__modulo=modulo).values('jurado__id', 'jurado__username')
-        return Response({'data': jurados})
+        try:
+            modulo = self.get_object()
+            asignaciones = AsignacionJurado.objects.filter(
+                practica__modulo=modulo
+            ).select_related(
+                'jurado',
+                'practica',
+                'practica__estudiante'
+            ).distinct()
 
+            jurados_data = {}
+            for asignacion in asignaciones:
+                jurado_id = asignacion.jurado.id
+                if jurado_id not in jurados_data:
+                    jurados_data[jurado_id] = {
+                        'jurado__id': jurado_id,
+                        'jurado__username': asignacion.jurado.username,
+                        'jurado__first_name': asignacion.jurado.first_name,
+                        'estudiantes': []
+                    }
+
+                jurados_data[jurado_id]['estudiantes'].append({
+                    'id': asignacion.practica.estudiante.id,
+                    'nombre': f"{asignacion.practica.estudiante.first_name} {asignacion.practica.estudiante.last_name}",
+                    'estado': asignacion.practica.estado,
+                    'fecha_asignacion': asignacion.fecha_asignacion
+                })
+
+            return Response({
+                'status': 'success',
+                'data': list(jurados_data.values())
+            })
+        except Exception as e:
+            return Response({
+                'status': 'error',
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
     @action(detail=True, methods=['post'], url_path='asignar-jurado')
@@ -492,47 +525,69 @@ class InformeViewSet(viewsets.ModelViewSet):
 
 
 class EvaluacionViewSet(viewsets.ModelViewSet):
-    queryset = Evaluacion.objects.all()
     serializer_class = EvaluacionSerializer
     permission_classes = [IsAuthenticated, EsJurado]
+
+    def get_queryset(self):
+        return Evaluacion.objects.filter(
+            jurado=self.request.user
+        ).select_related(
+            'practica',
+            'practica__estudiante',
+            'practica__modulo'
+        )
+
+    @action(detail=False, methods=['get'])
+    def get_queryset(self):
+        if self.request.user.rol == 'JURADO':
+            return Evaluacion.objects.filter(jurado=self.request.user)
+        return Evaluacion.objects.none()
+    def mis_evaluaciones(self, request):
+        evaluaciones = self.get_queryset()
+        serializer = self.get_serializer(evaluaciones, many=True)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        })
 
     @action(detail=False, methods=['post'])
     def evaluar_practica(self, request):
         try:
-            # 1. Get practica_id and validate practice exists
             practica_id = request.data.get('practica_id')
-            practica = Practica.objects.get(id=practica_id)
             if not practica_id:
                 return Response({"error": "practica_id es requerido"}, status=400)
             
             practica = Practica.objects.get(id=practica_id)
-            # Verificar si el jurado ya evaluó esta práctica
-            evaluacion_existente = Evaluacion.objects.filter(
-                practica_id=practica_id, 
-                jurado=request.user
-            ).exists()
             
-            if evaluacion_existente:
+            # Verificar asignación del jurado
+            if not AsignacionJurado.objects.filter(
+                practica=practica, 
+                jurado=request.user
+            ).exists():
                 return Response({
-                    "error": "Ya has evaluado esta práctica anteriormente"
+                    "error": "No estás asignado a esta práctica"
+                }, status=403)
+
+            # Verificar evaluación previa
+            if Evaluacion.objects.filter(
+                practica=practica, 
+                jurado=request.user
+            ).exists():
+                return Response({
+                    "error": "Ya has evaluado esta práctica"
                 }, status=400)
 
-            # 2. Check if jurado already evaluated
-            if Evaluacion.objects.filter(practica=practica, jurado=request.user).exists():
-                return Response(
-                    {"error": "Ya has evaluado esta práctica"}, 
-                    status=400
-                )
-
-            # 3. Check number of evaluations
-            evaluaciones_count = Evaluacion.objects.filter(practica=practica).count()
+            # Verificar límite de evaluaciones
+            evaluaciones_count = Evaluacion.objects.filter(
+                practica=practica
+            ).count()
+            
             if evaluaciones_count >= 3:
-                return Response(
-                    {"error": "Esta práctica ya tiene 3 evaluaciones"},
-                    status=400
-                )
+                return Response({
+                    "error": "Esta práctica ya tiene el máximo de evaluaciones"
+                }, status=400)
 
-            # 4. Create evaluation
+            # Crear evaluación
             evaluacion = Evaluacion.objects.create(
                 practica=practica,
                 jurado=request.user,
@@ -541,20 +596,28 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
                 criterios_evaluados=request.data.get('criterios_evaluados', {})
             )
 
-            # 5. Calculate final grade if third evaluation
+            # Calcular nota final si es la tercera evaluación
             if evaluaciones_count == 2:
                 evaluaciones = Evaluacion.objects.filter(practica=practica)
                 promedio = sum(e.calificacion for e in evaluaciones) / 3
-                practica.nota_final = promedio
+                practica.nota_final = round(promedio, 2)
                 practica.estado = 'EVALUADO'
                 practica.save()
 
-            return Response(self.get_serializer(evaluacion).data, status=201)
+            return Response({
+                'status': 'success',
+                'message': 'Evaluación registrada exitosamente',
+                'data': self.get_serializer(evaluacion).data
+            }, status=201)
 
         except Practica.DoesNotExist:
-            return Response({"error": "Práctica no encontrada"}, status=404)
+            return Response({
+                "error": "Práctica no encontrada"
+            }, status=404)
         except Exception as e:
-            return Response({"error": str(e)}, status=400)
+            return Response({
+                "error": str(e)
+            }, status=400)
 
 
 

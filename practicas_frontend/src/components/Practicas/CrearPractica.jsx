@@ -111,13 +111,13 @@ const CrearPractica = () => {
                     </Form.Group>
 
                     <Form.Group className="mb-3">
-                        <Form.Label>Supervisor</Form.Label>
+                        <Form.Label>Docente</Form.Label>
                         <Form.Select
                             value={formData.supervisor}
                             onChange={e => setFormData({ ...formData, supervisor: e.target.value })}
                             required
                         >
-                            <option value="">Seleccione un supervisor</option>
+                            <option value="">Seleccione un Docente</option>
                             {docentes.map(docente => (
                                 <option key={docente.id} value={docente.id}>
                                     {`${docente.first_name} ${docente.last_name}`}
