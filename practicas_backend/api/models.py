@@ -125,7 +125,7 @@ class Asistencia(models.Model):
     )
     puntualidad = models.CharField(
         max_length=10,
-        choices=[('PUNTUAL', 'Puntual'), ('TARDANZA', 'Tardanza')],
+        choices=[('PUNTUAL', 'Puntual'), ('TARDANZA', 'Tardanza'), ('FALTA', 'Falta')],
         default='PUNTUAL'
     )
     criterios_asistencia = models.JSONField(null=True, blank=True)
@@ -152,6 +152,8 @@ class Asistencia(models.Model):
         return Decimal('0.00')
 
     def save(self, *args, **kwargs):
+        if self.asistio == 'FALTA':
+            self.puntualidad = 'FALTA'
         if self.criterios_asistencia:
             self.puntaje_diario = self.calcular_puntaje_diario()
         super().save(*args, **kwargs)

@@ -165,7 +165,7 @@ const DocenteDashboard = () => {
     };
 
     const menuItems = [
-        { icon: <FaCheck />, text: "LISTAR PRACTICA DOCENTE", component: 'listarpractica' },
+        { icon: <FaCheck />, text: "LISTAR ALUMNOS", component: 'listarpractica' },
         { icon: <FaCheck />, text: "CALIFICACIONES DIARIAS", component: 'diarionota' },
     ]
     const renderComponent = () => {

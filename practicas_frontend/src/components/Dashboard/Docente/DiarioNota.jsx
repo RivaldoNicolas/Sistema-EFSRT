@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { registrarAsistencia } from '../../../redux/slices/docenteSlice';
 import { Table, Form, Button } from 'react-bootstrap';
+import { showAlert } from '../../../redux/slices/alertSlice';
 
 const DiarioNota = ({ setCurrentComponent, practicaId }) => {
     const dispatch = useDispatch();
@@ -21,7 +22,6 @@ const DiarioNota = ({ setCurrentComponent, practicaId }) => {
         puntaje_general: "0.00"
     });
 
-    // Update puntajes when criterios change
     const handleCriterioChange = (tipo, valor) => {
         const numeroValor = parseInt(valor);
         if (numeroValor >= 0 && numeroValor <= 20) {
@@ -55,35 +55,52 @@ const DiarioNota = ({ setCurrentComponent, practicaId }) => {
         setCurrentComponent('diariod');
     };
 
+    const handleAsistenciaChange = (e) => {
+        const value = e.target.value;
+        setAsistenciaData(prev => ({
+            ...prev,
+            asistio: value,
+            // Si es falta, establecemos puntualidad como "FALTA"
+            puntualidad: value === 'FALTA' ? 'FALTA' : prev.puntualidad
+        }));
+    };
+
     const handleGuardarAsistencia = async () => {
         try {
-            // Asegurarse que practicaId es un número
             const dataToSend = {
                 ...asistenciaData,
                 practica: parseInt(practicaId),
                 fecha: fechaActual,
+                // Asegurar que los valores numéricos sean números
                 criterios_asistencia: {
-                    CONCEPTUAL: parseInt(asistenciaData.criterios_asistencia.CONCEPTUAL),
-                    PROCEDIMENTAL: parseInt(asistenciaData.criterios_asistencia.PROCEDIMENTAL),
-                    ACTITUDINAL: parseInt(asistenciaData.criterios_asistencia.ACTITUDINAL)
-                }
+                    CONCEPTUAL: Number(asistenciaData.criterios_asistencia.CONCEPTUAL),
+                    PROCEDIMENTAL: Number(asistenciaData.criterios_asistencia.PROCEDIMENTAL),
+                    ACTITUDINAL: Number(asistenciaData.criterios_asistencia.ACTITUDINAL)
+                },
+                // Convertir a string con 2 decimales
+                puntaje_diario: Number(asistenciaData.puntaje_diario).toFixed(2),
+                puntaje_general: Number(asistenciaData.puntaje_general).toFixed(2)
             };
 
-            console.log('Datos a enviar:', dataToSend); // Para debugging
+            console.log('Datos a enviar:', dataToSend);
             const result = await dispatch(registrarAsistencia(dataToSend)).unwrap();
-            alert('Asistencia registrada exitosamente');
+            dispatch(showAlert({
+                message: 'Asistencia registrada exitosamente',
+                type: 'success'
+            }));
             setCurrentComponent('diariod');
         } catch (error) {
-            // Mostrar el error específico del backend
+            console.log('Error completo:', error);
             const errorMessage = error.response?.data?.detail ||
                 error.response?.data?.message ||
-                Object.values(error.response?.data || {})[0]?.[0] ||
                 'Error al registrar la asistencia';
-            alert(errorMessage);
-            console.error('Datos del error:', error.response?.data);
+
+            dispatch(showAlert({
+                message: errorMessage,
+                type: 'error'
+            }));
         }
     };
-
 
 
     return (
@@ -109,23 +126,25 @@ const DiarioNota = ({ setCurrentComponent, practicaId }) => {
                     <Form.Label>Estado de Asistencia</Form.Label>
                     <Form.Select
                         value={asistenciaData.asistio}
-                        onChange={(e) => setAsistenciaData(prev => ({ ...prev, asistio: e.target.value }))}
+                        onChange={handleAsistenciaChange}
                     >
                         <option value="ASISTIO">Asistió</option>
                         <option value="FALTA">Falta</option>
                     </Form.Select>
                 </Form.Group>
 
-                <Form.Group className="mb-3">
-                    <Form.Label>Puntualidad</Form.Label>
-                    <Form.Select
-                        value={asistenciaData.puntualidad}
-                        onChange={(e) => setAsistenciaData(prev => ({ ...prev, puntualidad: e.target.value }))}
-                    >
-                        <option value="PUNTUAL">Puntual</option>
-                        <option value="TARDANZA">Tardanza</option>
-                    </Form.Select>
-                </Form.Group>
+                {asistenciaData.asistio === 'ASISTIO' && (
+                    <Form.Group className="mb-3">
+                        <Form.Label>Puntualidad</Form.Label>
+                        <Form.Select
+                            value={asistenciaData.puntualidad}
+                            onChange={(e) => setAsistenciaData(prev => ({ ...prev, puntualidad: e.target.value }))}
+                        >
+                            <option value="PUNTUAL">Puntual</option>
+                            <option value="TARDANZA">Tardanza</option>
+                        </Form.Select>
+                    </Form.Group>
+                )}
             </div>
 
             <div className="mb-4">
