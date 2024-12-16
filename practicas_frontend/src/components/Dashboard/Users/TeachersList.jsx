@@ -30,7 +30,7 @@ const TeachersList = () => {
     return (
         <div className="bg-white p-4 rounded shadow">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h3>Lista de Docentes</h3>
+                <h3>Lista de Docentes y Jurados Evaluadores</h3>
                 <Form.Select
                     style={{ width: '300px' }}
                     value={selectedRole}
@@ -93,6 +93,7 @@ const TeachersList = () => {
                             <p><strong>Nombres:</strong> {selectedUser.first_name}</p>
                             <p><strong>Apellidos:</strong> {selectedUser.last_name}</p>
                             <p><strong>Email:</strong> {selectedUser.email}</p>
+                            <p><strong>DNI:</strong> {selectedUser.dni || 'No especificado'}</p>
                             <p><strong>Teléfono:</strong> {selectedUser.telefono || 'No especificado'}</p>
                             <p><strong>Dirección:</strong> {selectedUser.direccion || 'No especificada'}</p>
                         </div>

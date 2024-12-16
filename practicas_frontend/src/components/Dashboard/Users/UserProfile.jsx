@@ -106,6 +106,10 @@ const UserProfile = () => {
                                                 <td>{user?.email}</td>
                                             </DataRow>
                                             <DataRow>
+                                                <DataLabel><FaIdCard className="me-2 text-primary" /> DNI:</DataLabel>
+                                                <td>{user?.dni || 'No especificado'}</td>
+                                            </DataRow>
+                                            <DataRow>
                                                 <DataLabel><FaUserTag className="me-2 text-primary" /> Rol:</DataLabel>
                                                 <td>{roleLabels[user?.rol] || user?.rol}</td>
                                             </DataRow>

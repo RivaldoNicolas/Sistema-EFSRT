@@ -3,8 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchModulos, fetchJurados, asignarJurado } from '../../redux/slices/moduloSlice';
 import { showAlert } from '../../redux/slices/alertSlice';
 import { fetchUsersByRole } from "../../redux/slices/userSlice";
-
-import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
 
 const AsignarJurado = () => {
     const dispatch = useDispatch();
@@ -20,17 +19,17 @@ const AsignarJurado = () => {
     useEffect(() => {
         const loadData = async () => {
             try {
-                await dispatch(fetchModulos());
-                await dispatch(fetchJurados());
-                await dispatch(fetchUsersByRole('ESTUDIANTE'));
+                await Promise.all([
+                    dispatch(fetchModulos()),
+                    dispatch(fetchJurados()),
+                    dispatch(fetchUsersByRole('ESTUDIANTE'))
+                ]);
             } catch (error) {
                 console.error("Error cargando datos:", error);
             }
         };
         loadData();
     }, [dispatch]);
-
-    console.log("Estudiantes en el componente:", estudiantes);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -44,16 +43,12 @@ const AsignarJurado = () => {
         }
 
         try {
-            const datos = {
+            const result = await dispatch(asignarJurado({
                 modulo_id: selectedModulo,
                 jurado_id: selectedJurado,
                 encargado_id: user.id,
                 estudiante_id: selectedEstudiante,
-            };
-
-            console.log("Datos a enviar:", datos);
-            const result = await dispatch(asignarJurado(datos)).unwrap();
-            console.log("Respuesta:", result);
+            })).unwrap();
 
             if (result.status === "success") {
                 setSelectedModulo("");
@@ -63,14 +58,8 @@ const AsignarJurado = () => {
                     type: 'success',
                     message: 'Jurado asignado exitosamente!'
                 }));
-            } else {
-                dispatch(showAlert({
-                    type: 'error',
-                    message: 'Hubo un problema al asignar el jurado.'
-                }));
             }
         } catch (error) {
-            console.error("Error en la asignación:", error);
             dispatch(showAlert({
                 type: 'error',
                 message: 'Error en la asignación: ' + error.message
@@ -79,74 +68,95 @@ const AsignarJurado = () => {
     };
 
     return (
-        <Container>
-            <h2>Asignar Jurado</h2>
-            <Form onSubmit={handleSubmit}>
-                <Row>
-                    <Col>
-                        <Form.Group controlId="moduloSelect">
-                            <Form.Control
-                                as="select"
-                                value={selectedModulo}
-                                onChange={(e) => setSelectedModulo(e.target.value)}
-                                aria-label="Seleccionar Módulo"
+        <Container fluid className="px-4">
+            <Card className="shadow-sm border-0">
+                <Card.Header className="bg-white border-bottom py-3">
+                    <h4 className="mb-0 text-primary">
+                        <i className="fas fa-user-plus me-2"></i>
+                        Asignación de Jurado
+                    </h4>
+                </Card.Header>
+                <Card.Body className="p-4">
+                    <Form onSubmit={handleSubmit}>
+                        <Row className="g-4">
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label className="fw-bold">
+                                        <i className="fas fa-book me-2"></i>
+                                        Módulo
+                                    </Form.Label>
+                                    <Form.Select
+                                        value={selectedModulo}
+                                        onChange={(e) => setSelectedModulo(e.target.value)}
+                                        className="form-select-lg"
+                                    >
+                                        <option value="">Seleccione un módulo</option>
+                                        {modulos.map(modulo => (
+                                            <option key={modulo.id} value={modulo.id}>
+                                                {modulo.nombre}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label className="fw-bold">
+                                        <i className="fas fa-user-tie me-2"></i>
+                                        Jurado
+                                    </Form.Label>
+                                    <Form.Select
+                                        value={selectedJurado}
+                                        onChange={(e) => setSelectedJurado(e.target.value)}
+                                        className="form-select-lg"
+                                    >
+                                        <option value="">Seleccione un jurado</option>
+                                        {jurados.map(jurado => (
+                                            <option key={jurado.id} value={jurado.id}>
+                                                {jurado.first_name} {jurado.last_name}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label className="fw-bold">
+                                        <i className="fas fa-user-graduate me-2"></i>
+                                        Estudiante
+                                    </Form.Label>
+                                    <Form.Select
+                                        value={selectedEstudiante}
+                                        onChange={(e) => setSelectedEstudiante(e.target.value)}
+                                        className="form-select-lg"
+                                    >
+                                        <option value="">Seleccione un estudiante</option>
+                                        {estudiantes.map((estudiante) => (
+                                            <option key={estudiante.id} value={estudiante.id}>
+                                                {estudiante.first_name} {estudiante.last_name}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <div className="d-flex justify-content-end mt-4">
+                            <Button
+                                type="submit"
+                                size="lg"
+                                className="px-4"
+                                variant="primary"
                             >
-                                <option value="">Seleccione un módulo</option>
-                                {modulos.map(modulo => (
-                                    <option key={modulo.id} value={modulo.id}>
-                                        {modulo.nombre}
-                                    </option>
-                                ))}
-                            </Form.Control>
-                        </Form.Group>
-                    </Col>
-
-                    <Col>
-                        <Form.Group controlId="juradoSelect">
-                            <Form.Control
-                                as="select"
-                                value={selectedJurado}
-                                onChange={(e) => setSelectedJurado(e.target.value)}
-                                aria-label="Seleccionar Jurado"
-                            >
-                                <option value="">Seleccione un jurado</option>
-                                {jurados.map(jurado => (
-                                    <option key={jurado.id} value={jurado.id}>
-                                        {jurado.first_name} {jurado.last_name}
-                                    </option>
-                                ))}
-                            </Form.Control>
-                        </Form.Group>
-                    </Col>
-
-                    <Col>
-                        <Form.Select
-                            value={selectedEstudiante}
-                            onChange={(e) => setSelectedEstudiante(e.target.value)}
-                            className="form-select"
-                            style={{
-                                color: '#000',
-                                backgroundColor: '#fff',
-                                border: '1px solid #ced4da'
-                            }}
-                        >
-                            <option value="">Seleccione un estudiante</option>
-                            {estudiantes.map((estudiante) => (
-                                <option
-                                    key={estudiante.id}
-                                    value={estudiante.id}
-                                    style={{ color: '#000' }}
-                                >
-                                    {estudiante.first_name} {estudiante.last_name}
-                                </option>
-                            ))}
-                        </Form.Select>
-
-                    </Col>
-                </Row>
-
-                <Button type="submit">Asignar Jurado</Button>
-            </Form>
+                                <i className="fas fa-save me-2"></i>
+                                Asignar Jurado
+                            </Button>
+                        </div>
+                    </Form>
+                </Card.Body>
+            </Card>
         </Container>
     );
 };

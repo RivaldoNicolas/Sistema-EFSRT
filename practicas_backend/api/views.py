@@ -20,8 +20,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['username', 'first_name', 'last_name', 'email']
-    filterset_fields = ['rol']
+    search_fields = ['username', 'first_name', 'last_name', 'email', 'dni']
+    filterset_fields = ['rol','dni']
 
     def get_permissions(self):
         if self.action in ['register', 'login', 'token_refresh','logout']:
@@ -313,21 +313,21 @@ class PracticaViewSet(viewsets.ModelViewSet):
     serializer_class = PracticaSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    
+   
     filterset_fields = {
         'fecha_inicio': ['gte', 'lte', 'exact'],
         'modulo__tipo_modulo': ['exact'],
         'estudiante': ['exact'],
-        'supervisor': ['exact'],
+        'supervisores': ['exact'],
         'estado': ['exact']
     }
-    
+   
     search_fields = [
         'estudiante__username',
         'estudiante__first_name',
         'estudiante__last_name',
-        'supervisor__username',
-        'supervisor__first_name',
+        'supervisores__username',
+        'supervisores__first_name',
         'modulo__nombre',
         'modulo__tipo_modulo'
     ]
@@ -336,24 +336,21 @@ class PracticaViewSet(viewsets.ModelViewSet):
         user = self.request.user
         base_queryset = Practica.objects.select_related(
             'estudiante',
-            'supervisor',
             'modulo'
         ).prefetch_related(
+            'supervisores',
             'evaluacion_set__jurado'
         )
 
         if user.rol == 'ESTUDIANTE':
-            # Get unique practice IDs first
             unique_practice_ids = base_queryset.filter(
                 estudiante=user
             ).values('modulo').annotate(
                 max_id=models.Max('id')
             ).values_list('max_id', flat=True)
-            
-            # Then filter by those IDs
             return base_queryset.filter(id__in=unique_practice_ids)
         elif user.rol == 'DOCENTE':
-            return base_queryset.filter(supervisor=user)
+            return base_queryset.filter(supervisores=user)
         elif user.rol == 'JURADO':
             return base_queryset.filter(asignacionjurado__jurado=user)
         return base_queryset
@@ -411,18 +408,16 @@ class InformeViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Informe.objects.select_related(
             'practica__estudiante',
-            'practica__supervisor',
             'evaluado_por'
-        )
+        ).prefetch_related('practica__supervisores')
 
         if user.rol == 'ESTUDIANTE':
             return queryset.filter(practica__estudiante=user)
         elif user.rol == 'PRACTICAS':
             return queryset
         elif user.rol == 'DOCENTE':
-            return queryset.filter(practica__supervisor=user)
+            return queryset.filter(practica__supervisores=user)
         return queryset.none()
-
     def create(self, request, *args, **kwargs):
         try:
             # Validar que el estudiante tenga una práctica activa
@@ -626,8 +621,8 @@ class GestionarEstudiantesViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated, EsSecretaria]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['username', 'first_name', 'last_name', 'carrera']
-    filterset_fields = ['carrera', 'ciclo']
+    search_fields = ['username', 'first_name', 'last_name', 'carrera','dni']
+    filterset_fields = ['carrera', 'ciclo','dni']
 
     @action(detail=False, methods=['post'])
     def asignar_modulo(self, request):
@@ -647,7 +642,7 @@ class GestionarDocentesViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated, EsEncargadoPracticas]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['username', 'first_name', 'last_name']
+    search_fields = ['username', 'first_name', 'last_name','dni']
 
     @action(detail=False, methods=['post'])
     def asignar_supervisor(self, request):

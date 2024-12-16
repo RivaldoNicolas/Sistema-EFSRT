@@ -16,6 +16,7 @@ class Usuario(AbstractUser):
         ('ESTUDIANTE', 'Estudiante'),
         ('JURADO', 'Jurado Evaluador'),
     ]
+    dni = models.CharField(max_length=8, unique=True, null=True, blank=True)
     rol = models.CharField(max_length=30, choices=ROL_CHOICES)
     telefono = models.CharField(max_length=15, null=True, blank=True)
     direccion = models.TextField(null=True, blank=True)
@@ -71,12 +72,19 @@ class Practica(models.Model):
     ]
     estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='practicas')
     modulo = models.ForeignKey(ModuloPracticas, on_delete=models.CASCADE)
-    supervisor = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='supervisiones')
+    supervisores = models.ManyToManyField(
+        Usuario, 
+        related_name='practicas_supervisadas',
+        limit_choices_to={'rol': 'DOCENTE'}
+    )
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
     horas_completadas = models.IntegerField(default=0)
     nota_final = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+
+    def __str__(self):
+        return f"{self.estudiante.username} - {self.modulo.nombre}"
 
     def calcular_nota_final(self):
         asistencias = Asistencia.objects.filter(practica=self)
@@ -199,7 +207,12 @@ class Evaluacion(models.Model):
 class AsignacionDocente(models.Model):
     docente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='asignaciones')
     modulo = models.ForeignKey(ModuloPracticas, on_delete=models.CASCADE)
+    practica = models.ForeignKey(Practica, on_delete=models.CASCADE, null=True)
     fecha_asignacion = models.DateField()
+
+    class Meta:
+        unique_together = ['docente', 'practica']
+
 
 class AsignacionJurado(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)

@@ -129,7 +129,8 @@ const DocenteJuradoList = () => {
                             <p><strong>Rol:</strong> {roles.find(role => role.value === selectedUser.rol)?.label}</p>
                             <p><strong>Estado:</strong> {selectedUser.is_active ? 'Activo' : 'Inactivo'}</p>
                             <p><strong>Teléfono:</strong> {selectedUser.telefono || 'No especificado'}</p>
-                            <p><strong>Dirección:</strong> {selectedUser.direccion || 'No especificada'}</p>
+                            <p><strong>Teléfono:</strong> {selectedUser.telefono || 'No especificado'}</p>
+                            <p><strong>DNI:</strong> {selectedUser.dni || 'No especificada'}</p>
                             <p><strong>Edad:</strong> {selectedUser.edad || 'No especificada'}</p>
                         </div>
                     )}

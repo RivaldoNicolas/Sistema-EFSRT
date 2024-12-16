@@ -17,12 +17,18 @@ class UsuarioSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = ['id', 'username', 'email', 'password', 'rol', 'first_name', 'last_name',
                  'telefono', 'direccion', 'edad', 'estudiante_data', 'carrera', 'ciclo',
-                 'boleta_pago', 'fut']
+                 'boleta_pago', 'fut', 'dni']
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True},
-            'rol': {'required': True}
+            'rol': {'required': True},
         }
+    def validate_dni(self, value):
+        # Validación para el DNI
+        if not value.isdigit() or len(value) != 8:
+            raise serializers.ValidationError("El DNI debe tener 8 dígitos numéricos")
+        return value
+
 
     def get_estudiante_data(self, obj):
         try:
@@ -89,32 +95,32 @@ class ModuloPracticasSerializer(serializers.ModelSerializer):
 
 class PracticaSerializer(serializers.ModelSerializer):
     estudiante = UsuarioSerializer(read_only=True)
-    supervisor = UsuarioSerializer(read_only=True)
+    supervisores = UsuarioSerializer(many=True, read_only=True)
     modulo = ModuloPracticasSerializer(read_only=True)
     
     # Add write fields
     estudiante_id = serializers.IntegerField(write_only=True)
-    supervisor_id = serializers.IntegerField(write_only=True)
+    supervisores_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True
+    )
     modulo_id = serializers.IntegerField(write_only=True)
-    
-    # Agregar campos para las notas individuales
+   
     nota_asistencia = serializers.SerializerMethodField()
     nota_jurado = serializers.SerializerMethodField()
     nota_informe = serializers.SerializerMethodField()
-    
     nota_final = serializers.DecimalField(
         max_digits=4,
         decimal_places=2,
         validators=[MinValueValidator(0), MaxValueValidator(20)],
         read_only=True
     )
-
     class Meta:
         model = Practica
         fields = [
             'id',
             'estudiante', 'estudiante_id',
-            'supervisor', 'supervisor_id',
+            'supervisores', 'supervisores_ids',
             'modulo', 'modulo_id',
             'fecha_inicio',
             'fecha_fin',
@@ -126,6 +132,17 @@ class PracticaSerializer(serializers.ModelSerializer):
             'horas_completadas'
         ]
 
+    def create(self, validated_data):
+        supervisores_ids = validated_data.pop('supervisores_ids')
+        practica = super().create(validated_data)
+        practica.supervisores.set(supervisores_ids)
+        return practica
+
+    def update(self, instance, validated_data):
+        if 'supervisores_ids' in validated_data:
+            supervisores_ids = validated_data.pop('supervisores_ids')
+            instance.supervisores.set(supervisores_ids)
+        return super().update(instance, validated_data)
     def get_nota_asistencia(self, obj):
         asistencias = Asistencia.objects.filter(practica=obj)
         if asistencias.exists():
@@ -211,17 +228,16 @@ class InformeSerializer(serializers.ModelSerializer):
     evaluador_nombre = serializers.CharField(source='evaluado_por.get_full_name', read_only=True)
     modulo_nombre = serializers.CharField(source='practica.modulo.nombre', read_only=True)
     modulo_tipo = serializers.CharField(source='practica.modulo.tipo_modulo', read_only=True)
+    supervisores_nombres = serializers.SerializerMethodField()
 
     class Meta:
         model = Informe
-        fields = [
-            'id', 'practica', 'documento', 'documento_url', 
-            'contenido', 'fecha_entrega', 'calificacion', 
-            'observaciones', 'evaluado_por', 'fecha_evaluacion',
-            'aprobado', 'estudiante_nombre', 'evaluador_nombre',
-            'modulo_nombre', 'modulo_tipo'
-        ]
+        fields = '__all__'
         read_only_fields = ['evaluado_por', 'fecha_evaluacion', 'aprobado']
+
+    def get_supervisores_nombres(self, obj):
+        return [f"{supervisor.first_name} {supervisor.last_name}" 
+                for supervisor in obj.practica.supervisores.all()]
 
     def get_documento_url(self, obj):
         if obj.documento:

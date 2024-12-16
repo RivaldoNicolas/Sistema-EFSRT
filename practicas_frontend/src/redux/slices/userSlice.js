@@ -46,7 +46,7 @@ export const deleteUser = createAsyncThunk(
 
 export const updateUserProfile = createAsyncThunk(
   "users/updateProfile",
-  async (userData, { dispatch }) => {
+  async (userData, { dispatch, getState }) => {
     const dataToSend = {
       username: userData.username,
       first_name: userData.first_name,
@@ -59,9 +59,16 @@ export const updateUserProfile = createAsyncThunk(
       dni: userData.dni || "",
     };
 
-    const response = await api.put(`/usuarios/${userData.id}/`, dataToSend);
-    dispatch(updateUserProfile(response.data));
-    return response.data;
+    try {
+      const response = await api.put(`/usuarios/${userData.id}/`, dataToSend);
+
+      // En su lugar, usar el reducer directamente
+      dispatch(setUserProfileData(response.data));
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 );
 
@@ -81,6 +88,14 @@ const userSlice = createSlice({
     deleteError: null,
   },
   reducers: {
+    // Agregar nuevo reducer
+    setUserProfileData: (state, action) => {
+      const userData = action.payload;
+      const index = state.users.findIndex((user) => user.id === userData.id);
+      if (index !== -1) {
+        state.users[index] = userData;
+      }
+    },
     clearErrors: (state) => {
       state.error = null;
       state.updateError = null;
@@ -197,5 +212,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearErrors, clearSelectedUser, setUsers } = userSlice.actions;
+export const { clearErrors, clearSelectedUser, setUsers, setUserProfileData } =
+  userSlice.actions;
 export default userSlice.reducer;

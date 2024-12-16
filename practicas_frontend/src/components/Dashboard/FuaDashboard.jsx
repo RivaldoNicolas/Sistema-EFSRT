@@ -13,7 +13,6 @@ import TeacherList from './Users/TeachersList';
 import NotasFinalesAlumnos from '../Practicas/NotasFinalesAlumnos';
 
 
-
 const DashboardContainer = styled(Container)`
   background-color: #f8f9fa;
   min-height: 100vh;
@@ -163,7 +162,7 @@ const FuaDashboard = () => {
   };
 
   const menuItems = [
-    { icon: <FaUsers />, text: "LISTA DE DOCENTE", component: 'TeacherList' },
+    { icon: <FaUsers />, text: "LISTA DE DOCENTE, JURADO", component: 'TeacherList' },
     { icon: <FaUsers />, text: "LISTA DE NOTAS", component: 'NotasFinalesAlumnos' },
   ];
 

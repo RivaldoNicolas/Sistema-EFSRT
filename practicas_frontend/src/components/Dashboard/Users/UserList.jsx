@@ -137,6 +137,7 @@ const UserList = () => {
                             <p><strong>Username:</strong> {selectedUser.username}</p>
                             <p><strong>Nombre:</strong> {selectedUser.first_name}</p>
                             <p><strong>Apellido:</strong> {selectedUser.last_name}</p>
+                            <p><strong>DNI:</strong> {selectedUser.dni || 'No especificado'}</p>
                             <p><strong>Email:</strong> {selectedUser.email}</p>
                             <p><strong>Rol:</strong> {roles.find(role => role.value === selectedUser.rol)?.label}</p>
                             <p><strong>Estado:</strong> {selectedUser.is_active ? 'Activo' : 'Inactivo'}</p>

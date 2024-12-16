@@ -28,10 +28,11 @@ export const createPractica = createAsyncThunk(
   "practicas/create",
   async (practicaData, { rejectWithValue }) => {
     try {
+      // Formato exacto que espera el backend
       const formattedData = {
-        estudiante_id: Number(practicaData.estudiante),
-        modulo_id: Number(practicaData.modulo),
-        supervisor_id: Number(practicaData.supervisor),
+        estudiante_id: practicaData.estudiante,
+        modulo_id: practicaData.modulo,
+        supervisores_ids: practicaData.supervisores,
         fecha_inicio: practicaData.fecha_inicio,
         fecha_fin: new Date(
           new Date(practicaData.fecha_inicio).getTime() +
@@ -39,17 +40,14 @@ export const createPractica = createAsyncThunk(
         )
           .toISOString()
           .split("T")[0],
-        estado: "PENDIENTE",
+        estado: practicaData.estado,
       };
 
       const response = await api.post("/practicas/", formattedData);
       return response.data;
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message ||
-        Object.values(error.response?.data || {})[0]?.[0] ||
-        "Error al crear la práctica";
-      return rejectWithValue(errorMessage);
+      console.log("Error detallado:", error.response?.data);
+      return rejectWithValue(error.response?.data);
     }
   }
 );

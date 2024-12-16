@@ -1,12 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Form, Button, Card } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { showAlert } from '../../../redux/slices/alertSlice';
 import { updateUserProfile, fetchUserProfile } from '../../../redux/slices/userSlice';
 import { updateUserProfile as updateUserProfileAction } from '../../../redux/slices/authSlice';
-
 
 const NAVY_BLUE = '#1a365d';
 const LIGHT_BLUE = '#2563eb';
@@ -169,9 +168,12 @@ const EditProfile = ({ onCancel }) => {
     const user = useSelector(state => state.auth.user);
     const updateStatus = useSelector(state => state.users.updateStatus);
     const dispatch = useDispatch();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const submitTimeoutRef = useRef(null);
 
     const [formData, setFormData] = useState({
         username: user?.username || '',
+        dni: user?.dni || '',
         first_name: user?.first_name || '',
         last_name: user?.last_name || '',
         email: user?.email || '',
@@ -187,26 +189,29 @@ const EditProfile = ({ onCancel }) => {
 
     const [errors, setErrors] = useState({});
 
-    const validateForm = () => {
+    // Validación optimizada usando useCallback
+    const validateForm = useCallback(() => {
         const newErrors = {};
+        const dniValue = formData.dni.toString().trim();
 
-        if (!formData.username) {
-            newErrors.username = 'El username es requerido';
-        } else if (formData.username.length < 3) {
+        if (!formData.username || formData.username.length < 3) {
             newErrors.username = 'El username debe tener al menos 3 caracteres';
+        }
+
+        if (!dniValue || !/^\d{8}$/.test(dniValue)) {
+            newErrors.dni = 'El DNI debe tener exactamente 8 dígitos numéricos';
         }
 
         if (!formData.first_name) newErrors.first_name = 'El nombre es requerido';
         if (!formData.last_name) newErrors.last_name = 'El apellido es requerido';
-        if (!formData.email) newErrors.email = 'El email es requerido';
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (formData.email && !emailRegex.test(formData.email)) {
+        if (!formData.email || !emailRegex.test(formData.email)) {
             newErrors.email = 'Email inválido';
         }
 
-        if (formData.telefono && !/^\d{9,}$/.test(formData.telefono)) {
-            newErrors.telefono = 'Teléfono inválido (mínimo 9 dígitos)';
+        if (formData.telefono && !/^\d{9}$/.test(formData.telefono)) {
+            newErrors.telefono = 'Teléfono debe tener 9 dígitos';
         }
 
         if (formData.edad && (formData.edad < 18 || formData.edad > 100)) {
@@ -215,25 +220,21 @@ const EditProfile = ({ onCancel }) => {
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    };
+    }, [formData]);
 
-    const handleChange = (e) => {
+    // Manejador de cambios optimizado
+    const handleChange = useCallback((e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+    }, []);
 
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: null
-            }));
-        }
-    };
-
+    // Manejador de envío optimizado
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
 
         if (!validateForm()) {
             dispatch(showAlert({
@@ -243,45 +244,52 @@ const EditProfile = ({ onCancel }) => {
             return;
         }
 
-        const formattedData = {
-            id: user.id,
-            username: formData.username,
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            email: formData.email,
-            telefono: formData.telefono || "",
-            direccion: formData.direccion || "",
-            edad: formData.edad ? parseInt(formData.edad) : null,
-            rol: user.rol,
-            dni: user.dni || "",
-            estudiante_data: user.estudiante_data
-        };
+        setIsSubmitting(true);
+        submitTimeoutRef.current = setTimeout(async () => {
 
-        try {
-            const resultAction = await dispatch(updateUserProfile(formattedData));
+            try {
+                const formattedData = {
+                    id: user.id,
+                    username: formData.username,
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    email: formData.email,
+                    telefono: formData.telefono || "",
+                    direccion: formData.direccion || "",
+                    edad: formData.edad ? parseInt(formData.edad) : null,
+                    rol: user.rol,
+                    dni: formData.dni.toString(),
+                    estudiante_data: user.estudiante_data
+                };
 
-            if (resultAction.payload) {
-                // Actualizar el estado global directamente
-                dispatch(updateUserProfileAction(resultAction.payload));
+                const resultAction = await dispatch(updateUserProfile(formattedData));
 
+                if (resultAction.payload) {
+                    dispatch(updateUserProfileAction(resultAction.payload));
+                    dispatch(showAlert({
+                        type: 'success',
+                        message: 'Perfil actualizado exitosamente'
+                    }));
+                    onCancel();
+                }
+            } catch (error) {
                 dispatch(showAlert({
-                    type: 'success',
-                    message: 'Perfil actualizado exitosamente'
+                    type: 'error',
+                    message: error.message || 'Error al actualizar el perfil'
                 }));
-                onCancel();
-
-                // Forzar actualización del componente
-                window.dispatchEvent(new Event('storage'));
+            } finally {
+                setIsSubmitting(false);
             }
-        } catch (error) {
-            dispatch(showAlert({
-                type: 'error',
-                message: error.message || 'Error al actualizar el perfil'
-            }));
-        }
+        }, 500);
     };
-
-
+    // Limpiar timeout al desmontar el componente
+    useEffect(() => {
+        return () => {
+            if (submitTimeoutRef.current) {
+                clearTimeout(submitTimeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
         <motion.div
@@ -309,6 +317,20 @@ const EditProfile = ({ onCancel }) => {
                                 />
                                 <Form.Control.Feedback type="invalid">
                                     {errors.username}
+                                </Form.Control.Feedback>
+                            </StyledFormGroup>
+                            <StyledFormGroup required>
+                                <Form.Label>DNI</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="dni"
+                                    value={formData.dni}
+                                    onChange={handleChange}
+                                    isInvalid={!!errors.dni}
+                                    maxLength={8}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.dni}
                                 </Form.Control.Feedback>
                             </StyledFormGroup>
 
