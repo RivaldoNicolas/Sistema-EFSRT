@@ -37,7 +37,6 @@ class Estudiante(models.Model):
     def __str__(self):
         return f"{self.usuario.username} - {self.carrera}"
 
-
     def save(self, *args, **kwargs):
         self.usuario.rol = 'ESTUDIANTE'
         self.usuario.save()
@@ -185,7 +184,7 @@ class Informe(models.Model):
     def save(self, *args, **kwargs):
         # Si el informe tiene calificación, actualizar el estado de aprobado
         if self.calificacion is not None:
-            self.aprobado = self.calificacion >= 10.5
+            self.aprobado = self.calificacion >= 12.5
         super().save(*args, **kwargs)
 
         # Actualizar nota final de la práctica
