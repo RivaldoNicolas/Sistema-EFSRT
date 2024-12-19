@@ -30,7 +30,7 @@ export const fetchJuradosAsignados = createAsyncThunk(
   }
 );
 
-// Agregar o actualizar la acción asignarJurado
+// la acción asignarJurado
 export const asignarJurado = createAsyncThunk(
   "modulos/asignarJurado",
   async ({ modulo_id, jurado_id, estudiante_id }, { rejectWithValue }) => {
@@ -39,10 +39,18 @@ export const asignarJurado = createAsyncThunk(
         jurado_id,
         estudiante_id,
       });
+
+      if (response.data.status === "error") {
+        throw new Error(response.data.message);
+      }
+
       return response.data;
     } catch (error) {
-      console.error("Error en la asignación desde la API:", error.response);
-      return rejectWithValue(error.response?.data || "Error desconocido");
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Error en la asignación"
+      );
     }
   }
 );
@@ -156,6 +164,26 @@ export const asignarDocente = createAsyncThunk(
     }
   }
 );
+export const verificarPracticaExistente = createAsyncThunk(
+  "modulos/verificarPracticaExistente",
+  async ({ modulo_id, estudiante_id }) => {
+    const response = await api.get(
+      `/practicas/verificar/${modulo_id}/${estudiante_id}/`
+    );
+    return response.data;
+  }
+);
+
+export const fetchJuradosPractica = createAsyncThunk(
+  "modulos/fetchJuradosPractica",
+  async ({ modulo_id, estudiante_id }) => {
+    const response = await api.get(
+      `/practicas/jurados/${modulo_id}/${estudiante_id}/`
+    );
+    return response.data;
+  }
+);
+
 const moduloSlice = createSlice({
   name: "modulos",
   initialState: {
@@ -165,6 +193,8 @@ const moduloSlice = createSlice({
     juradosAsignados: [], // Inicializar como un arreglo vacío
     juradoAsignado: null,
     jurados: [],
+    juradosPractica: [], // Add this
+    practicaExiste: false, // Add this
     loading: false,
     error: null,
   },
@@ -175,6 +205,12 @@ const moduloSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(verificarPracticaExistente.fulfilled, (state, action) => {
+        state.practicaExiste = action.payload.exists;
+      })
+      .addCase(fetchJuradosPractica.fulfilled, (state, action) => {
+        state.juradosPractica = action.payload;
+      })
       .addCase(listarJuradosAsignados.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -192,23 +228,30 @@ const moduloSlice = createSlice({
       .addCase(asignarJurado.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.asignacionExitosa = false;
       })
       .addCase(asignarJurado.fulfilled, (state, action) => {
-        console.log("Jurados asignados correctamente:", action.payload);
-        state.juradoAsignado = action.payload.jurado;
-        // Actualiza el módulo en la lista
-        const moduleIndex = state.modulos.findIndex(
-          (modulo) => modulo.id === action.payload.modulo_id
-        );
-        if (moduleIndex !== -1) {
-          state.modulos[moduleIndex].jurado = action.payload.jurado;
+        state.loading = false;
+        state.error = null;
+        // Update juradosAsignados if needed
+        if (action.payload.data) {
+          const moduloId = action.payload.data.practica_id;
+          const juradoId = action.payload.data.asignacion_id;
+
+          // Update the jurados list for the specific módulo
+          const moduleIndex = state.modulos.findIndex(
+            (modulo) => modulo.id === moduloId
+          );
+          if (moduleIndex !== -1) {
+            if (!state.modulos[moduleIndex].jurados) {
+              state.modulos[moduleIndex].jurados = [];
+            }
+            state.modulos[moduleIndex].jurados.push(juradoId);
+          }
         }
       })
       .addCase(asignarJurado.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
-        state.asignacionExitosa = false;
+        state.error = action.payload || "Error al asignar jurado";
       })
       .addCase(fetchJuradosDisponibles.pending, (state) => {
         state.loading = true;

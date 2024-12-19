@@ -63,18 +63,28 @@ class ModuloPracticas(models.Model):
             raise ValidationError('Las horas requeridas deben ser positivas')
 
 class Practica(models.Model):
+    class Meta:
+        unique_together = ['estudiante', 'modulo']
+
     ESTADO_CHOICES = [
         ('PENDIENTE', 'Pendiente'),
         ('EN_CURSO', 'En Curso'),
         ('COMPLETADO', 'Completado'),
         ('EVALUADO', 'Evaluado')
     ]
+
     estudiante = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='practicas')
     modulo = models.ForeignKey(ModuloPracticas, on_delete=models.CASCADE)
     supervisores = models.ManyToManyField(
-        Usuario, 
+        Usuario,
         related_name='practicas_supervisadas',
         limit_choices_to={'rol': 'DOCENTE'}
+    )
+    jurados = models.ManyToManyField(
+        Usuario, 
+        related_name='practicas_evaluadas', 
+        limit_choices_to={'rol': 'JURADO'}, 
+        through='AsignacionJurado'
     )
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
@@ -86,40 +96,80 @@ class Practica(models.Model):
         return f"{self.estudiante.username} - {self.modulo.nombre}"
 
     def calcular_nota_final(self):
+        # Obtener todas las evaluaciones necesarias
         asistencias = Asistencia.objects.filter(practica=self)
-        evaluaciones = Evaluacion.objects.filter(practica=self)
-        informes = Informe.objects.filter(practica=self)
+        evaluaciones_jurado = Evaluacion.objects.filter(
+            practica=self,
+            jurado__rol='JURADO'
+        )
+        informes = Informe.objects.filter(
+            practica=self,
+            calificacion__isnull=False
+        )
 
-        # Calcular promedios solo si existen registros
-        nota_asistencia = asistencias.aggregate(Avg('puntaje_general'))['puntaje_general__avg'] or Decimal('0')
-        nota_evaluacion = evaluaciones.aggregate(Avg('calificacion'))['calificacion__avg'] or Decimal('0')
-        nota_informe = informes.filter(calificacion__isnull=False).aggregate(
-            Avg('calificacion'))['calificacion__avg'] or Decimal('0')
+        # Calcular nota de asistencia (30%)
+        nota_asistencia = asistencias.aggregate(
+            Avg('puntaje_general')
+        )['puntaje_general__avg'] or Decimal('0')
 
-        # Calcular nota final con pesos
+        # Calcular nota de jurados (40%) - Promedio de los 3 jurados
+        nota_jurado = evaluaciones_jurado.aggregate(
+            Avg('calificacion')
+        )['calificacion__avg'] or Decimal('0')
+
+        # Calcular nota de informe (30%)
+        nota_informe = informes.aggregate(
+            Avg('calificacion')
+        )['calificacion__avg'] or Decimal('0')
+
+        # Calcular nota final ponderada
         self.nota_final = (
             (Decimal(str(nota_asistencia)) * Decimal('0.3')) +
-            (Decimal(str(nota_evaluacion)) * Decimal('0.4')) +
+            (Decimal(str(nota_jurado)) * Decimal('0.4')) +
             (Decimal(str(nota_informe)) * Decimal('0.3'))
         )
-        
-        # Actualizar estado si todas las evaluaciones están completas
-        if (asistencias.exists() and 
-            evaluaciones.exists() and 
-            informes.filter(calificacion__isnull=False).exists()):
+
+        # Verificar si todas las evaluaciones están completas
+        jurados_count = evaluaciones_jurado.count()
+        todas_evaluaciones_completas = (
+            asistencias.exists() and
+            jurados_count == 3 and
+            informes.exists()
+        )
+
+        if todas_evaluaciones_completas:
             self.estado = 'EVALUADO'
-        
+
         self.save()
         return self.nota_final
 
+    def verificar_estado_evaluaciones(self):
+        return {
+            'asistencias_completas': Asistencia.objects.filter(practica=self).exists(),
+            'jurados_evaluaron': Evaluacion.objects.filter(
+                practica=self,
+                jurado__rol='JURADO'
+            ).count(),
+            'informe_evaluado': Informe.objects.filter(
+                practica=self,
+                calificacion__isnull=False
+            ).exists()
+        }
 
     def clean(self):
         if self.fecha_fin < self.fecha_inicio:
             raise ValidationError('La fecha de fin debe ser posterior a la fecha de inicio')
+        
         if self.horas_completadas < 0:
             raise ValidationError('Las horas completadas no pueden ser negativas')
+        
         if self.nota_final and (self.nota_final < 0 or self.nota_final > 20):
             raise ValidationError('La nota final debe estar entre 0 y 20')
+
+        # Verificar límite de 3 jurados
+        jurados_count = self.jurados.count()
+        if jurados_count > 3:
+            raise ValidationError('No se pueden asignar más de 3 jurados por práctica')
 
 
 class Asistencia(models.Model):
@@ -216,5 +266,17 @@ class AsignacionDocente(models.Model):
 class AsignacionJurado(models.Model):
     practica = models.ForeignKey(Practica, on_delete=models.CASCADE)
     jurado = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'rol': 'JURADO'})
-    fecha_asignacion = models.DateField()
+    fecha_asignacion = models.DateField(auto_now_add=True)
     fecha_evaluacion = models.DateField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ['practica', 'jurado']
+
+    def clean(self):
+        # Verificar límite de 3 jurados por práctica
+        jurados_count = AsignacionJurado.objects.filter(
+            practica=self.practica
+        ).exclude(id=self.id).count()
+        
+        if jurados_count >= 3:
+            raise ValidationError('No se pueden asignar más de 3 jurados por práctica')

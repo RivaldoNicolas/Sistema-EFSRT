@@ -307,7 +307,27 @@ class AsignacionDocenteSerializer(serializers.ModelSerializer):
 class AsignacionJuradoSerializer(serializers.ModelSerializer):
     class Meta:
         model = AsignacionJurado
-        fields = ['practica', 'jurado', 'fecha_asignacion', 'fecha_evaluacion']
+        fields = ['id', 'practica', 'jurado', 'fecha_asignacion', 'fecha_evaluacion']
+        read_only_fields = ['fecha_asignacion', 'fecha_evaluacion']
+
+    def validate(self, data):
+        # Verificar si ya existe la asignación
+        if AsignacionJurado.objects.filter(
+            practica=data['practica'],
+            jurado=data['jurado']
+        ).exists():
+            raise serializers.ValidationError("Este jurado ya está asignado a esta práctica")
+        
+        # Verificar límite de jurados
+        jurados_count = AsignacionJurado.objects.filter(
+            practica=data['practica']
+        ).count()
+        
+        if jurados_count >= 3:
+            raise serializers.ValidationError("La práctica ya tiene el máximo de jurados permitidos")
+        
+        return data
+
 
 class EstudianteSerializer(serializers.ModelSerializer):
     class Meta:

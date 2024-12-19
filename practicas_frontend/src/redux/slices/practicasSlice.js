@@ -28,25 +28,27 @@ export const createPractica = createAsyncThunk(
   "practicas/create",
   async (practicaData, { rejectWithValue }) => {
     try {
-      // Formato exacto que espera el backend
+      // Calculate end date (180 days from start)
+      const fechaInicio = new Date(practicaData.fecha_inicio);
+      const fechaFin = new Date(fechaInicio);
+      fechaFin.setDate(fechaFin.getDate() + 180);
+
+      // Format data exactly as Django expects it
       const formattedData = {
-        estudiante_id: practicaData.estudiante,
-        modulo_id: practicaData.modulo,
-        supervisores_ids: practicaData.supervisores,
+        estudiante_id: practicaData.estudiante_id,
+        modulo_id: practicaData.modulo_id,
+        supervisores_ids: practicaData.supervisores_ids,
         fecha_inicio: practicaData.fecha_inicio,
-        fecha_fin: new Date(
-          new Date(practicaData.fecha_inicio).getTime() +
-            180 * 24 * 60 * 60 * 1000
-        )
-          .toISOString()
-          .split("T")[0],
+        fecha_fin: fechaFin.toISOString().split("T")[0],
         estado: practicaData.estado,
       };
+
+      console.log("Datos formateados:", formattedData);
 
       const response = await api.post("/practicas/", formattedData);
       return response.data;
     } catch (error) {
-      console.log("Error detallado:", error.response?.data);
+      console.log("Error completo:", error.response?.data);
       return rejectWithValue(error.response?.data);
     }
   }

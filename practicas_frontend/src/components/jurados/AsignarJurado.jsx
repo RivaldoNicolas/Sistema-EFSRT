@@ -37,35 +37,37 @@ const AsignarJurado = () => {
         if (!selectedModulo || !selectedJurado || !selectedEstudiante) {
             dispatch(showAlert({
                 type: 'error',
-                message: 'Debe seleccionar un módulo, un jurado y un estudiante.'
+                message: 'Todos los campos son requeridos'
             }));
             return;
         }
 
         try {
-            const result = await dispatch(asignarJurado({
+            await dispatch(asignarJurado({
                 modulo_id: selectedModulo,
                 jurado_id: selectedJurado,
-                encargado_id: user.id,
-                estudiante_id: selectedEstudiante,
+                estudiante_id: selectedEstudiante
             })).unwrap();
 
-            if (result.status === "success") {
-                setSelectedModulo("");
-                setSelectedJurado("");
-                setSelectedEstudiante("");
-                dispatch(showAlert({
-                    type: 'success',
-                    message: 'Jurado asignado exitosamente!'
-                }));
-            }
+            dispatch(showAlert({
+                type: 'success',
+                message: 'Jurado asignado exitosamente'
+            }));
+
+            // Reset form
+            setSelectedModulo('');
+            setSelectedJurado('');
+            setSelectedEstudiante('');
+
         } catch (error) {
             dispatch(showAlert({
                 type: 'error',
-                message: 'Error en la asignación: ' + error.message
+                message: error.response?.data?.message || 'Error al asignar jurado'
             }));
         }
     };
+
+
 
     return (
         <Container fluid className="px-4">

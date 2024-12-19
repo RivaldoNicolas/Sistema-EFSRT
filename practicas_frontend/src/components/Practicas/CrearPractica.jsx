@@ -44,7 +44,6 @@ const CrearPractica = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Datos del formulario:', formData);
 
         if (!formData.modulo || !formData.estudiante || formData.supervisores.length === 0) {
             dispatch(showAlert({
@@ -54,20 +53,36 @@ const CrearPractica = () => {
             return;
         }
 
+        if (formData.supervisores.length !== 5) {
+            dispatch(showAlert({
+                type: 'error',
+                message: 'Debe seleccionar exactamente 5 docentes supervisores'
+            }));
+            return;
+        }
+
         const dataToSend = {
-            modulo: Number(formData.modulo),
-            estudiante: Number(formData.estudiante),
-            supervisores: formData.supervisores.map(Number),
+            estudiante_id: Number(formData.estudiante),
+            modulo_id: Number(formData.modulo),
+            supervisores_ids: formData.supervisores.map(Number),
             fecha_inicio: formData.fecha_inicio,
-            estado: formData.estado
+            estado: 'PENDIENTE'
         };
 
+        console.log('Datos enviados:', dataToSend);
+
         try {
-            await dispatch(createPractica(dataToSend)).unwrap();
+            const result = await dispatch(createPractica(dataToSend)).unwrap();
+
+            if (result.error) {
+                throw new Error(result.error);
+            }
+
             dispatch(showAlert({
                 type: 'success',
                 message: '¡Práctica creada exitosamente!'
             }));
+
             setFormData({
                 modulo: '',
                 estudiante: '',
@@ -75,13 +90,31 @@ const CrearPractica = () => {
                 fecha_inicio: getCurrentDate(),
                 estado: 'PENDIENTE'
             });
+
+
         } catch (error) {
-            dispatch(showAlert({
-                type: 'error',
-                message: error.message || 'Error al crear la práctica'
-            }));
+            const errorMessage = error.response?.data || error.message;
+
+            if (typeof errorMessage === 'object') {
+                // Handle validation errors
+                const messages = Object.entries(errorMessage)
+                    .map(([key, value]) => `${key}: ${value.join(', ')}`)
+                    .join('\n');
+
+                dispatch(showAlert({
+                    type: 'error',
+                    message: messages
+                }));
+            } else {
+                dispatch(showAlert({
+                    type: 'error',
+                    message: errorMessage || 'Error al crear la práctica'
+                }));
+            }
         }
     };
+
+
 
     if (isLoading) {
         return (
@@ -170,8 +203,9 @@ const CrearPractica = () => {
                                         ))}
                                     </Form.Select>
                                     <Form.Text className="text-muted">
-                                        Mantenga presionado Ctrl (Cmd en Mac) para seleccionar múltiples docentes
+                                        Mantenga presionado Ctrl (Cmd en Mac) para seleccionar docentes. Debe seleccionar exactamente 5 docentes.
                                     </Form.Text>
+
                                 </Form.Group>
                             </Col>
 
